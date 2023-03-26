@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+mod fast;
 mod matrix;
 mod naive;
 mod test_util;

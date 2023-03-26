@@ -1,3 +1,5 @@
+#![cfg(test)]
+
 use crate::matrix::Matrix;
 
 pub(crate) fn expected_8x8() -> Matrix {

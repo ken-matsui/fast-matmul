@@ -13,11 +13,11 @@ fn main() {
     let n: usize = 8;
 
     // C = A * B
-    let mut A = Matrix::serial_new(m, k);
-    let mut B = Matrix::serial_new(k, n);
-    let mut C = Matrix::new(m, n);
+    let A = Matrix::serial_new(m, k);
+    let B = Matrix::serial_new(k, n);
+    let C = Matrix::new(m, n);
 
-    naive::matmul(m, k, n, A.as_mut_ptr(), B.as_mut_ptr(), C.as_mut_ptr());
+    // naive::matmul(m, k, n, A.as_mut_ptr(), B.as_mut_ptr(), C.as_mut_ptr());
 
     println!("C = A * B");
     println!("A: {A}");

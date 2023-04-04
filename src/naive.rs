@@ -1,6 +1,6 @@
 use crate::matrix::Matrix;
 
-pub(crate) fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matrix) {
+pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matrix) {
     for j in 0..n {
         for i in 0..m {
             for p in 0..k {

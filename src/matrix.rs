@@ -10,7 +10,7 @@ static GLOBAL: MiMalloc = MiMalloc;
 type Value = i64;
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct Matrix {
+pub struct Matrix {
     row: usize,
     col: usize,
 
@@ -18,7 +18,7 @@ pub(crate) struct Matrix {
 }
 
 impl Matrix {
-    pub(crate) fn new(row: usize, col: usize) -> Self {
+    pub fn new(row: usize, col: usize) -> Self {
         Matrix {
             row,
             col,
@@ -27,7 +27,7 @@ impl Matrix {
         }
     }
     /// for debug
-    pub(crate) fn serial_new(row: usize, col: usize) -> Self {
+    pub fn serial_new(row: usize, col: usize) -> Self {
         let mut matrix = Self::new(row, col);
 
         let mut num: Value = 0;
@@ -41,7 +41,7 @@ impl Matrix {
         matrix
     }
     /// for benchmark
-    pub(crate) fn random_new(row: usize, col: usize) -> Self {
+    pub fn random_new(row: usize, col: usize) -> Self {
         Matrix {
             row,
             col,
@@ -50,27 +50,21 @@ impl Matrix {
     }
 
     #[inline]
-    pub(crate) fn get(&self, i: usize, j: usize) -> Value {
+    pub fn get(&self, i: usize, j: usize) -> Value {
         self.inner[j * self.row + i]
     }
     #[inline]
-    pub(crate) fn get_ref_mut(&mut self, i: usize, j: usize) -> &mut Value {
+    pub fn get_ref_mut(&mut self, i: usize, j: usize) -> &mut Value {
         &mut self.inner[j * self.row + i]
     }
     #[inline]
-    pub(crate) fn insert(&mut self, i: usize, j: usize, val: Value) {
+    pub fn insert(&mut self, i: usize, j: usize, val: Value) {
         self.inner[j * self.row + i] = val;
     }
 
     /// Returns a copied matrix must be smaller than the original
     /// The range ends must be exclusive
-    pub(crate) fn pack_into(
-        &self,
-        i_from: usize,
-        i_to: usize,
-        j_from: usize,
-        j_to: usize,
-    ) -> Matrix {
+    pub fn pack_into(&self, i_from: usize, i_to: usize, j_from: usize, j_to: usize) -> Matrix {
         let mut copy = Matrix::new(i_to - i_from, j_to - j_from);
         for i in i_from..i_to {
             for j in j_from..j_to {

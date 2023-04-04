@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 fake = "2.5.0"
 mimalloc = { version = "*", default-features = false } # disable secure mode
+
+[dev-dependencies]
+criterion = "0.4.0"

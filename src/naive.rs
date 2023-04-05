@@ -1,4 +1,4 @@
-use crate::matrix::Matrix;
+use crate::Matrix;
 
 pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matrix) {
     for j in 0..n {
@@ -13,7 +13,6 @@ pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::matrix::Matrix;
     use crate::test_util::expected_8x8;
 
     #[test]

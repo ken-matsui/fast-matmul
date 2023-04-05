@@ -26,6 +26,16 @@ mv ./target/criterion/reports ./reports/7-something
 scp -r $NETID@attu.cs.washington.edu:/homes/iws/$NETID/fast-matmul/target/criterion/reports ./reports/7-something
 ```
 
+## ASM
+
+```shell
+cargo install cargo-asm
+```
+
+```shell
+cargo asm fast_matmul::naive::matmul --no-color > naive.m1.asm
+```
+
 ## References
 
 * Drewniak, Krzysztof. (2018). GEMM3: Constant-Workspace High-Performance Multiplication of Three Matrices for Matrix Chaining. https://www.researchgate.net/publication/326920343_GEMM3_Constant-Workspace_High-Performance_Multiplication_of_Three_Matrices_for_Matrix_Chaining

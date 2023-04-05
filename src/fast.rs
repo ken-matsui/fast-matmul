@@ -1,11 +1,33 @@
-use crate::matrix::MatrixPtr;
+use crate::matrix::Matrix;
 
-pub(crate) fn matmul(m: usize, k: usize, n: usize, A: MatrixPtr, B: MatrixPtr, C: MatrixPtr) {
-    for j in 0..n {
-        for i in 0..m {
-            for p in 0..k {
-                unsafe {
-                    *C.get(i, j) += *A.get(i, p) * *B.get(p, j);
+const nc: usize = 2;
+const kc: usize = 2;
+const mc: usize = 2;
+const nr: usize = 2;
+const mr: usize = 2;
+
+pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matrix) {
+    for jc in (0..n).step_by(nc) {
+        for pc in (0..k).step_by(kc) {
+            let Bc = B.pack_into(pc, pc + kc, jc, jc + nc);
+            for ic in (0..m).step_by(mc) {
+                let Ac = A.pack_into(ic, ic + mc, pc, pc + kc);
+                //
+                // Macrokernel
+                //
+                for jr in (0..nc).step_by(nr) {
+                    for ir in (0..mc).step_by(mr) {
+                        //
+                        // Microkernel
+                        //
+                        for pr in 0..kc {
+                            for j in jr..nr {
+                                for i in ir..mr {
+                                    *C.get_ref_mut(i + ic, j + jc) += Ac.get(i, pr) * Bc.get(pr, j);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -24,11 +46,11 @@ mod tests {
         let k: usize = 8;
         let n: usize = 8;
 
-        let mut A = Matrix::serial_new(m, k);
-        let mut B = Matrix::serial_new(k, n);
+        let A = Matrix::serial_new(m, k);
+        let B = Matrix::serial_new(k, n);
         let mut C = Matrix::new(m, n);
 
-        matmul(m, k, n, A.as_mut_ptr(), B.as_mut_ptr(), C.as_mut_ptr());
+        matmul(m, k, n, &A, &B, &mut C);
         assert_eq!(C, expected_8x8());
     }
 }

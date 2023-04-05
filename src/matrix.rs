@@ -1,5 +1,7 @@
 use std::fmt::{self, Display, Formatter};
 
+// use debug_print::{debug_print as dprint, debug_println as dprintln};
+
 use mimalloc::MiMalloc;
 
 #[global_allocator]
@@ -65,9 +67,11 @@ impl Matrix {
     /// Returns a copied matrix must be smaller than the original
     /// The range ends must be exclusive
     pub fn pack_into(&self, i_from: usize, i_to: usize, j_from: usize, j_to: usize) -> Matrix {
+        // dprintln!("i_from..i_to: {i_from}..{i_to}, j_from: {j_from}..{j_to}");
         let mut copy = Matrix::new(i_to - i_from, j_to - j_from);
         for j in j_from..j_to {
             for i in i_from..i_to {
+                // dprint!("[i: {i}, j: {j}], ");
                 copy.insert(i - i_from, j - j_from, self.get(i, j));
             }
         }

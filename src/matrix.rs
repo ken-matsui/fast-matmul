@@ -59,16 +59,16 @@ impl Matrix {
     }
     #[inline]
     pub fn insert(&mut self, i: usize, j: usize, val: Value) {
-        self.inner[j * self.row + i] = val;
+        *self.get_ref_mut(i, j) = val;
     }
 
     /// Returns a copied matrix must be smaller than the original
     /// The range ends must be exclusive
     pub fn pack_into(&self, i_from: usize, i_to: usize, j_from: usize, j_to: usize) -> Matrix {
         let mut copy = Matrix::new(i_to - i_from, j_to - j_from);
-        for i in i_from..i_to {
-            for j in j_from..j_to {
-                copy.insert(i, j, self.get(i, j));
+        for j in j_from..j_to {
+            for i in i_from..i_to {
+                copy.insert(i - i_from, j - j_from, self.get(i, j));
             }
         }
         copy

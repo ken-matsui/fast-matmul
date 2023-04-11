@@ -9,7 +9,7 @@ static GLOBAL: MiMalloc = MiMalloc;
 // `Vec` will allocate memory through `GLOBAL` above
 
 /// Value type for matrix
-type Value = i64;
+type Value = u128;
 
 #[derive(Debug, PartialEq)]
 pub struct Matrix {

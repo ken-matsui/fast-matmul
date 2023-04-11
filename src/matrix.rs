@@ -13,8 +13,8 @@ type Value = u128;
 
 #[derive(Debug, PartialEq)]
 pub struct Matrix {
-    row: usize,
-    col: usize,
+    pub(crate) row: usize,
+    pub(crate) col: usize,
 
     inner: Vec<Value>,
 }
@@ -66,6 +66,8 @@ impl Matrix {
 
     /// Returns a copied matrix must be smaller than the original
     /// The range ends must be exclusive
+    ///
+    /// For better performance, this method does not check if arguments are out of bounds.
     pub fn pack_into(&self, i_from: usize, i_to: usize, j_from: usize, j_to: usize) -> Matrix {
         // dprintln!("i_from..i_to: {i_from}..{i_to}, j_from: {j_from}..{j_to}");
         let mut copy = Matrix::new(i_to - i_from, j_to - j_from);

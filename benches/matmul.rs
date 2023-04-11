@@ -20,7 +20,7 @@ fn fast_matmul(size: usize) {
 fn bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("Matmul");
     group.sample_size(10); // 10 is minimum required; default is 100
-    for parameter in [20000].iter() {
+    for parameter in [512].iter() {
         group.throughput(Throughput::Elements(*parameter as u64));
         group.bench_with_input(BenchmarkId::new("naive", parameter), parameter, |b, par| {
             b.iter(|| naive_matmul(*par))

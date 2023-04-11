@@ -1,4 +1,4 @@
-name: Deploy Reports
+name: Reports
 
 on:
   push:
@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  run:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

@@ -1,0 +1,38 @@
+Impl
+Inputs: c: Tensor(2048×2048, GL), a: Tensor(2048×2048, GL)
+Output: b: Tensor(2048×2048, GL)
+                                                                                spec                                                                                     cost                        RF    VRF     L1    GL
+------------------------------------------------------------------------------  ---------------------------------------------------------------------------------------  ------------------------  ----  -----  -----  ----
+tile (aT: 2048×64, bT: 2048×64) <- (a, b)                                       Matmul((2048×2048, u32), (2048×2048, u32), (2048×2048, u32), serial)                     2441588244480 = 32 * _      64     32  16896     0
+  AppliedBlock(c, aT, bT)                                                       Matmul((2048×2048, u32), (2048×64, u32, c1), (2048×64, u32, c1), serial)                 76299632640 (sum of 2)      64     32  16896     0
+    tile (bTt: 1×8) <- (bT)                                                     Zero((2048×64, u32, c1), serial)                                                         21626880 = 16384 * _         0     32     32     0
+      move[L1] bTtS <- bTt                                                      Zero((1×8, u32, ua), serial)                                                              1320 = 1100 + _             0     32     32     0
+        move[VRF] bTtSr <- bTtS                                                 Zero((1×8, u32, L1, ua), serial)                                                           140 = 100 + _              0     32      0     0
+          tile (bTtSrT: 1×4) <- (bTtSr)                                         Zero((1×8, u32, VRF, 1×4), serial)                                                          20 = 2 * _                0      0      0     0
+            AppliedVectorZero(bTtSrT)                                           Zero((1×4, u32, VRF, ua, 1×4), serial)                                                      10                        0      0      0     0
+          tile (bTtSt: 1×4, bTtSrT': 1×4) <- (bTtS, bTtSr)                      Store((1×8, u32, L1, ua), (1×8, u32, VRF, 1×4), serial)                                     20 = 2 * _                0      0      0     0
+            AppliedVectorAssign(bTtSt, bTtSrT')                                 Store((1×4, u32, L1, ua), (1×4, u32, VRF, ua, 1×4), serial)                                 10                        0      0      0     0
+        tile (bTtT: 1×1, bTtSt': 1×1) <- (bTt, bTtS)                            Store((1×8, u32, ua), (1×8, u32, L1, ua), serial)                                           80 = 8 * _                0      0      0     0
+          AppliedValueAssign(bTtT, bTtSt')                                      Store((1×1, u32, ua), (1×1, u32, L1, ua), serial)                                           10                        0      0      0     0
+    tile (cT: 2048×64, aTt: 64×64) <- (c, aT)                                   MatmulAccum((2048×2048, u32), (2048×64, u32, c1), (2048×64, u32, c1), serial)            76278005760 = 32 * _        64     32  16896     0
+      move[L1] aTtS <- aTt                                                      MatmulAccum((2048×64, u32, c1), (64×64, u32, c1, ua), (2048×64, u32, c1), serial)        2383687680 = 1126400 + _    64     32  16896     0
+        tile (cTt: 1×64, bTt': 1×64) <- (cT, bT)                                MatmulAccum((2048×64, u32, c1), (64×64, u32, L1, c1, ua), (2048×64, u32, c1), serial)    2382561280 = 2048 * _       64     32    512     0
+          move[L1] cTtS <- cTt                                                  MatmulAccum((1×64, u32, ua), (64×64, u32, L1, c1, ua), (1×64, u32, ua), serial)          1163360 = 8800 + _          64     32    512     0
+            move[L1] bTt's <- bTt'                                              MatmulAccum((1×64, u32, L1, ua), (64×64, u32, L1, c1, ua), (1×64, u32, ua), serial)      1154560 = 8800 + _          64     32    256     0
+              tile (cTtSt: 1×16, aTtSt: 16×64) <- (cTtS, aTtS)                  MatmulAccum((1×64, u32, L1, ua), (64×64, u32, L1, c1, ua), (1×64, u32, L1, ua), serial)  1145760 = 4 * _             64     32      0     0
+                move[RF] cTtStR <- cTtSt                                        MatmulAccum((1×16, u32, L1, ua), (16×64, u32, L1, c1, ua), (1×64, u32, L1, ua), serial)  286440 = 200 + _            64     32      0     0
+                  tile (cTtStT: 1×1, cTtStRt: 1×1) <- (cTtSt, cTtStR)           Load((1×16, u32, L1, ua), (1×16, u32, RF), serial)                                         160 = 16 * _               0      0      0     0
+                    AppliedValueAssign(cTtStT, cTtStRt)                         Load((1×1, u32, L1, ua), (1×1, u32, RF, ua), serial)                                        10                        0      0      0     0
+                  tile (aTtStT: 16×4, bTt'sT: 1×4) <- (aTtSt, bTt's)            MatmulAccum((1×16, u32, RF), (16×64, u32, L1, c1, ua), (1×64, u32, L1, ua), serial)      286080 = 16 * _              0     32      0     0
+                    move[VRF] bTt'sTr <- bTt'sT                                 MatmulAccum((1×16, u32, RF), (16×4, u32, L1, c1, ua), (1×4, u32, L1, ua), serial)        17880 = 100 + _              0     32      0     0
+                      AppliedVectorAssign(bTt'sT, bTt'sTr)                      Load((1×4, u32, L1, ua), (1×4, u32, VRF, 1×4), serial)                                      10                        0      0      0     0
+                      tile (cTtStRt': 1×1, aTtStTt: 1×4) <- (cTtStR, aTtStT)    MatmulAccum((1×16, u32, RF), (16×4, u32, L1, c1, ua), (1×4, u32, VRF, 1×4), serial)      17760 = 16 * _               0     16      0     0
+                        move[VRF] aTtStTtR <- aTtStTt                           MatmulAccum((1×1, u32, RF, ua), (1×4, u32, L1, ua), (1×4, u32, VRF, 1×4), serial)         1110 = 100 + _              0     16      0     0
+                          AppliedVectorAssign(aTtStTt, aTtStTtR)                Load((1×4, u32, L1, ua), (1×4, u32, VRF, 1×4), serial)                                      10                        0      0      0     0
+                          AppliedBroadcastVecMult(cTtStRt', aTtStTtR, bTt'sTr)  MatmulAccum((1×1, u32, RF, ua), (1×4, u32, VRF, 1×4), (1×4, u32, VRF, 1×4), serial)       1000                        0      0      0     0
+                      AppliedVectorAssign(bTt'sT, bTt'sTr)                      Store((1×4, u32, L1, ua), (1×4, u32, VRF, 1×4), serial)                                     10                        0      0      0     0
+Note: move* is a MoveLet scope where the introduced tensor is an output.
+
+Impl Runtime: 1.5080s
+
+Scheduling took 1481.44s

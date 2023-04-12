@@ -22,11 +22,11 @@ fn bench(c: &mut Criterion) {
     group.sample_size(10); // 10 is minimum required; default is 100
     for parameter in [512].iter() {
         group.throughput(Throughput::Elements(*parameter as u64));
-        group.bench_with_input(BenchmarkId::new("naive", parameter), parameter, |b, par| {
-            b.iter(|| naive_matmul(*par))
-        });
         group.bench_with_input(BenchmarkId::new("fast", parameter), parameter, |b, par| {
             b.iter(|| fast_matmul(*par))
+        });
+        group.bench_with_input(BenchmarkId::new("naive", parameter), parameter, |b, par| {
+            b.iter(|| naive_matmul(*par))
         });
     }
     group.finish();

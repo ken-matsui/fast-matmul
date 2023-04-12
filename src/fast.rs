@@ -72,7 +72,14 @@ mod tests {
 
     #[test]
     fn test_matmul() {
-        matmul_helper(17);
-        matmul_helper(512);
+        let mut i: usize = 2;
+        loop {
+            matmul_helper(i);
+            i = i.pow(2);
+
+            if i > 512 {
+                break;
+            }
+        }
     }
 }

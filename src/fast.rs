@@ -1,9 +1,11 @@
 use std::cmp::min;
+use std::fmt::{self, Display, Formatter};
 
 // use debug_print::{debug_print as dprint, debug_println as dprintln};
 
 use crate::Matrix;
 
+#[derive(Copy, Clone)]
 pub struct Param {
     pub nc: usize,
     pub mc: usize,
@@ -23,6 +25,12 @@ impl Default for Param {
 impl Param {
     pub fn new(nc: usize, mc: usize, kc: usize) -> Self {
         Self { nc, mc, kc }
+    }
+}
+
+impl Display for Param {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "(nc: {}, mc: {}, kc: {})", self.nc, self.mc, self.kc)
     }
 }
 

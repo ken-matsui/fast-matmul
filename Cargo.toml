@@ -12,6 +12,7 @@ mimalloc = { version = "*", default-features = false } # disable secure mode
 
 [dev-dependencies]
 criterion = "0.4.0"
+itertools = "0.10"
 
 [[bench]]
 name = "matmul"

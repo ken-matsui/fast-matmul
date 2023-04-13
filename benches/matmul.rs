@@ -1,5 +1,7 @@
 #![allow(non_snake_case)]
 
+use itertools::iproduct;
+
 use fast_matmul::{fast::Param, *};
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
@@ -20,19 +22,17 @@ fn fast_matmul(size: usize, param: Param) {
 fn bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("Matmul");
     group.sample_size(10); // 10 is minimum required; default is 100
-    for exp in 0..11 {
-        let parameter = 2_usize.pow(exp);
-        group.throughput(Throughput::Elements(parameter as u64));
+
+    let range = 0..=11; // 2^(0..=11)
+    for (nc_exp, mc_exp, kc_exp) in iproduct!(range.clone(), range.clone(), range) {
+        let parameter = Param::new(
+            2_usize.pow(nc_exp),
+            2_usize.pow(mc_exp),
+            2_usize.pow(kc_exp),
+        );
+        // group.throughput(Throughput::Elements(parameter as u64));
         group.bench_with_input(BenchmarkId::new("fast", parameter), &parameter, |b, par| {
-            b.iter(|| {
-                fast_matmul(
-                    2048,
-                    Param {
-                        nc: *par,
-                        ..Param::default()
-                    },
-                )
-            })
+            b.iter(|| fast_matmul(2048, *par))
         });
         // group.bench_with_input(BenchmarkId::new("naive", parameter), parameter, |b, par| {
         //     b.iter(|| naive_matmul(*par))

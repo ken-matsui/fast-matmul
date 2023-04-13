@@ -25,13 +25,13 @@ fn bench(c: &mut Criterion) {
 
     let range = 0..=11; // 2^(0..=11)
     for (nc_exp, mc_exp, kc_exp) in iproduct!(range.clone(), range.clone(), range) {
-        let parameter = Param::new(
+        let param = Param::new(
             2_usize.pow(nc_exp),
             2_usize.pow(mc_exp),
             2_usize.pow(kc_exp),
         );
         // group.throughput(Throughput::Elements(parameter as u64));
-        group.bench_with_input(BenchmarkId::new("fast", parameter), &parameter, |b, par| {
+        group.bench_with_input(BenchmarkId::new("fast", param), &param, |b, par| {
             b.iter(|| fast_matmul(2048, *par))
         });
         // group.bench_with_input(BenchmarkId::new("naive", parameter), parameter, |b, par| {

@@ -14,20 +14,23 @@ pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matr
         for pc in (0..k).step_by(kc) {
             let ik = min(pc + kc, k);
             let Bc = B.pack_into(pc, ik, jc, min(jc + nc, n));
+            let nr = Bc.col;
+
             for ic in (0..m).step_by(mc) {
                 // dprintln!("ic: {ic}, mc: {mc}, pc: {pc}, kc: {kc}");
                 let Ac = A.pack_into(ic, min(ic + mc, m), pc, ik);
+                let mr = Ac.row;
                 //
                 // Macrokernel
                 //
-                for jr in (0..nc).step_by(Bc.col) {
-                    for ir in (0..mc).step_by(Ac.row) {
+                for jr in (0..nc).step_by(nr) {
+                    for ir in (0..mc).step_by(mr) {
                         //
                         // Microkernel
                         //
                         for pr in 0..min(kc, Ac.col /* or Bc.row */) {
-                            for j in jr..Bc.col {
-                                for i in ir..Ac.row {
+                            for j in jr..nr {
+                                for i in ir..mr {
                                     *C.get_ref_mut(i + ic, j + jc) += Ac.get(i, pr) * Bc.get(pr, j);
                                 }
                             }

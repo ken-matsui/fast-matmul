@@ -4,31 +4,48 @@ use std::cmp::min;
 
 use crate::Matrix;
 
-// ref: https://github.com/flame/how-to-optimize-gemm/blob/master/src/MMult_4x4_15.c
-const nc: usize = 1000;
-const mc: usize = 256;
-const kc: usize = 128;
+pub struct Param {
+    pub nc: usize,
+    pub mc: usize,
+    pub kc: usize,
+}
 
-pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matrix) {
-    for jc in (0..n).step_by(nc) {
-        for pc in (0..k).step_by(kc) {
-            let ik = min(pc + kc, k);
-            let Bc = B.pack_into(pc, ik, jc, min(jc + nc, n));
+impl Default for Param {
+    fn default() -> Self {
+        Self {
+            nc: 1000,
+            mc: 64,
+            kc: 32,
+        }
+    }
+}
+
+impl Param {
+    pub fn new(nc: usize, mc: usize, kc: usize) -> Self {
+        Self { nc, mc, kc }
+    }
+}
+
+pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matrix, param: Param) {
+    for jc in (0..n).step_by(param.nc) {
+        for pc in (0..k).step_by(param.kc) {
+            let ik = min(pc + param.kc, k);
+            let Bc = B.pack_into(pc, ik, jc, min(jc + param.nc, n));
             let nr = Bc.col;
 
-            for ic in (0..m).step_by(mc) {
+            for ic in (0..m).step_by(param.mc) {
                 // dprintln!("ic: {ic}, mc: {mc}, pc: {pc}, kc: {kc}");
-                let Ac = A.pack_into(ic, min(ic + mc, m), pc, ik);
+                let Ac = A.pack_into(ic, min(ic + param.mc, m), pc, ik);
                 let mr = Ac.row;
                 //
                 // Macrokernel
                 //
-                for jr in (0..nc).step_by(nr) {
-                    for ir in (0..mc).step_by(mr) {
+                for jr in (0..param.nc).step_by(nr) {
+                    for ir in (0..param.mc).step_by(mr) {
                         //
                         // Microkernel
                         //
-                        for pr in 0..min(kc, Ac.col /* or Bc.row */) {
+                        for pr in 0..min(param.kc, Ac.col /* or Bc.row */) {
                             for j in jr..nr {
                                 for i in ir..mr {
                                     *C.get_ref_mut(i + ic, j + jc) += Ac.get(i, pr) * Bc.get(pr, j);
@@ -56,7 +73,7 @@ mod tests {
         let B = Matrix::serial_new(k, n);
         let mut C = Matrix::new(m, n);
 
-        matmul(m, k, n, &A, &B, &mut C);
+        matmul(m, k, n, &A, &B, &mut C, Param::default());
 
         let mut C2 = Matrix::new(m, n);
         naive::matmul(m, k, n, &A, &B, &mut C2);
@@ -68,7 +85,7 @@ mod tests {
     fn test_simple_matmul() {
         // simple cases: until the smallest step
         // no step_by occurs, meaning this is the same with iterating by 1
-        for size in 1..kc {
+        for size in 1..Param::default().kc {
             matmul_helper(size);
         }
     }

@@ -15,7 +15,11 @@ criterion = "0.4.0"
 itertools = "0.10"
 
 [[bench]]
-name = "matmul"
+name = "best-params"
+harness = false
+
+[[bench]]
+name = "naive-vs-fast"
 harness = false
 
 # The bench profile inherits the settings from the release profile.

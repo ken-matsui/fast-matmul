@@ -15,6 +15,16 @@ cargo criterion
 ```
 
 ```shell
+cargo criterion --bench naive-vs-fast
+```
+
+```shell
+cargo criterion --bench best-params
+```
+
+## Reports
+
+```shell
 open ./target/criterion/reports/index.html
 ```
 

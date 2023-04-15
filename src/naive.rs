@@ -1,10 +1,10 @@
 use crate::Matrix;
 
 pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matrix) {
-    for j in 0..n {
-        for i in 0..m {
+    for i in 0..m {
+        for j in 0..n {
             for p in 0..k {
-                *C.get_ref_mut(i, j) += A.get(i, p) * B.get(p, j);
+                *C.get_ref_mut(j, i) += A.get(p, i) * B.get(j, p);
             }
         }
     }

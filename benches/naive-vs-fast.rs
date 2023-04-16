@@ -24,7 +24,7 @@ fn bench(c: &mut Criterion) {
     for parameter in [2048].iter() {
         group.throughput(Throughput::Elements(*parameter as u64));
 
-        let param = Param::new(8, 2048, 1);
+        let param = Param::new(32, 2048, 1);
         group.bench_with_input(BenchmarkId::new("fast", parameter), parameter, |b, par| {
             b.iter(|| fast_matmul(*par, param))
         });

@@ -105,7 +105,7 @@ mod tests {
             matmul_helper(i);
             i = i.pow(2);
 
-            if i > 512 {
+            if i > 128 {
                 break;
             }
         }

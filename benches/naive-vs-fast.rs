@@ -5,14 +5,14 @@ use fast_matmul::{fast::Param, *};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 
 fn naive_matmul(size: usize) {
-    let A = Matrix::serial_new(size, size);
-    let B = Matrix::serial_new(size, size);
+    let A = Matrix::random_new(size, size);
+    let B = Matrix::random_new(size, size);
     let mut C = Matrix::new(size, size);
     naive::matmul(size, size, size, &A, &B, &mut C);
 }
 fn fast_matmul(size: usize, param: Param) {
-    let A = Matrix::serial_new(size, size);
-    let B = Matrix::serial_new(size, size);
+    let A = Matrix::random_new(size, size);
+    let B = Matrix::random_new(size, size);
     let mut C = Matrix::new(size, size);
     fast::matmul(size, size, size, &A, &B, &mut C, param);
 }

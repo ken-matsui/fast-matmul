@@ -1,10 +1,8 @@
 #![allow(non_snake_case)]
 
-use std::hint::black_box;
-
 use fast_matmul::{fast::Param, *};
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 
 fn bench(c: &mut Criterion) {
     let mut group = c.benchmark_group("Matmul");
@@ -19,11 +17,30 @@ fn bench(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::new("fast", size), size, |b, size| {
             let mut C = Matrix::new(*size, *size);
-            b.iter(|| black_box(fast::matmul(*size, *size, *size, black_box(&A), black_box(&B), black_box(&mut C), param)))
+            b.iter(|| {
+                black_box(fast::matmul(
+                    *size,
+                    *size,
+                    *size,
+                    black_box(&A),
+                    black_box(&B),
+                    black_box(&mut C),
+                    param,
+                ))
+            })
         });
         group.bench_with_input(BenchmarkId::new("naive", size), size, |b, size| {
             let mut C = Matrix::new(*size, *size);
-            b.iter(|| black_box(naive::matmul(*size, *size, *size, black_box(&A), black_box(&B), black_box(&mut C))))
+            b.iter(|| {
+                black_box(naive::matmul(
+                    *size,
+                    *size,
+                    *size,
+                    black_box(&A),
+                    black_box(&B),
+                    black_box(&mut C),
+                ))
+            })
         });
     }
     group.finish();

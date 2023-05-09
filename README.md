@@ -40,8 +40,15 @@ scp -r $NETID@attu.cs.washington.edu:/homes/iws/$NETID/fast-matmul/target/criter
 
 ```shell
 cargo install cargo-show-asm
+```
+
+### Outputs with Rust snippets
+
+```shell
 cargo asm --lib fast_matmul::fast::matmul --rust
 ```
+
+### Outputs only ASM
 
 ```shell
 cargo asm --lib fast_matmul::naive::matmul --no-color > naive.m1.asm

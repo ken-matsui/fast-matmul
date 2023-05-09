@@ -49,15 +49,15 @@ impl Matrix {
         }
     }
 
-    #[inline]
+    #[inline(always)]
     pub fn get(&self, i: usize, j: usize) -> Value {
         self.inner[j * self.row + i]
     }
-    #[inline]
+    #[inline(always)]
     pub fn get_ref_mut(&mut self, i: usize, j: usize) -> &mut Value {
         &mut self.inner[j * self.row + i]
     }
-    #[inline]
+    #[inline(always)]
     pub fn insert(&mut self, i: usize, j: usize, val: Value) {
         *self.get_ref_mut(i, j) = val;
     }

@@ -50,12 +50,12 @@ impl Matrix {
     }
 
     #[inline(always)]
-    pub fn get(&self, i: usize, j: usize) -> Value {
-        self.inner[j * self.row + i]
+    pub fn get(&self, i: usize, j: usize) -> &Value {
+        unsafe { self.inner.get_unchecked(j * self.row + i) }
     }
     #[inline(always)]
     pub fn get_ref_mut(&mut self, i: usize, j: usize) -> &mut Value {
-        &mut self.inner[j * self.row + i]
+        unsafe { &mut *self.inner.get_unchecked_mut(j * self.row + i) }
     }
     #[inline(always)]
     pub fn insert(&mut self, i: usize, j: usize, val: Value) {
@@ -70,7 +70,7 @@ impl Matrix {
         let mut copy = Matrix::new(i_to - i_from, j_to - j_from);
         for j in j_from..j_to {
             for i in i_from..i_to {
-                copy.insert(i - i_from, j - j_from, self.get(i, j));
+                copy.insert(i - i_from, j - j_from, *self.get(i, j));
             }
         }
         copy

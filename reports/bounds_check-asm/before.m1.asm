@@ -146,7 +146,7 @@ LBB13_6:
 	add x8, x5, x10
 	cmp x8, x22
 	csel x7, x8, x22, lo
-		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 75
+		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 70
 		let mut copy = Matrix::new(i_to - i_from, j_to - j_from);
 	sub x9, x7, x5
 	ldur x8, [x29, #-104]
@@ -222,10 +222,10 @@ LBB13_19:
 		&mut (*slice)[self]
 	cmp x8, x26
 	b.hs LBB13_90
-		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 78
+		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 73
 		copy.insert(i - i_from, j - j_from, self.get(i, j));
 	ldr w14, [x16, x0, lsl #2]
-		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 67
+		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 62
 		*self.get_ref_mut(i, j) = val;
 	str w14, [x27, x8, lsl #2]
 		// /rustc/2f2c438dce75d8cc532c3baa849eeddc0901802c/library/core/src/cmp.rs : 1363
@@ -298,7 +298,7 @@ LBB13_25:
 	add x8, x16, x19
 	cmp x8, x15
 	csel x10, x8, x15, lo
-		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 75
+		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 70
 		let mut copy = Matrix::new(i_to - i_from, j_to - j_from);
 	sub x22, x10, x16
 	ldur x8, [x29, #-96]
@@ -371,10 +371,10 @@ LBB13_38:
 		&mut (*slice)[self]
 	cmp x9, x28
 	b.hs LBB13_88
-		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 78
+		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 73
 		copy.insert(i - i_from, j - j_from, self.get(i, j));
 	ldr w14, [x20, x8, lsl #2]
-		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 67
+		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 62
 		*self.get_ref_mut(i, j) = val;
 	str w14, [x0, x9, lsl #2]
 		// /rustc/2f2c438dce75d8cc532c3baa849eeddc0901802c/library/core/src/cmp.rs : 1363
@@ -521,14 +521,14 @@ LBB13_60:
 		&mut (*slice)[self]
 	cmp x9, x25
 	b.hs LBB13_86
-		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/fast.rs : 57
+		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/fast.rs : 60
 		*C.get_ref_mut(i + ic, j + jc) += Ac.get(i, pr) * Bc.get(pr, j);
 	ldr w10, [x3, x17, lsl #2]
 	add x15, x17, #1
-		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 59
+		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 54
 		self.inner[j * self.row + i]
 	ldr w17, [x27, x8, lsl #2]
-		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/fast.rs : 57
+		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/fast.rs : 60
 		*C.get_ref_mut(i + ic, j + jc) += Ac.get(i, pr) * Bc.get(pr, j);
 	lsl x6, x9, #2
 	ldr w2, [x21, x6]
@@ -693,9 +693,9 @@ LBB13_86:
 		// /rustc/2f2c438dce75d8cc532c3baa849eeddc0901802c/library/core/src/slice/index.rs : 264
 		&mut (*slice)[self]
 Lloh8:
-	adrp x2, l_anon.59be6f2441934e95d79b4ac6bac88412.13@PAGE
+	adrp x2, l_anon.757e4453bdfd2025643d21437d3351a7.13@PAGE
 Lloh9:
-	add x2, x2, l_anon.59be6f2441934e95d79b4ac6bac88412.13@PAGEOFF
+	add x2, x2, l_anon.757e4453bdfd2025643d21437d3351a7.13@PAGEOFF
 	mov x0, x9
 	mov x1, x25
 	bl core::panicking::panic_bounds_check
@@ -703,9 +703,9 @@ LBB13_87:
 		// /rustc/2f2c438dce75d8cc532c3baa849eeddc0901802c/library/core/src/slice/index.rs : 258
 		&(*slice)[self]
 Lloh10:
-	adrp x2, l_anon.59be6f2441934e95d79b4ac6bac88412.12@PAGE
+	adrp x2, l_anon.757e4453bdfd2025643d21437d3351a7.12@PAGE
 Lloh11:
-	add x2, x2, l_anon.59be6f2441934e95d79b4ac6bac88412.12@PAGEOFF
+	add x2, x2, l_anon.757e4453bdfd2025643d21437d3351a7.12@PAGEOFF
 	mov x0, x8
 	mov x1, x24
 	bl core::panicking::panic_bounds_check
@@ -713,9 +713,9 @@ LBB13_88:
 		// /rustc/2f2c438dce75d8cc532c3baa849eeddc0901802c/library/core/src/slice/index.rs : 264
 		&mut (*slice)[self]
 Lloh12:
-	adrp x2, l_anon.59be6f2441934e95d79b4ac6bac88412.13@PAGE
+	adrp x2, l_anon.757e4453bdfd2025643d21437d3351a7.13@PAGE
 Lloh13:
-	add x2, x2, l_anon.59be6f2441934e95d79b4ac6bac88412.13@PAGEOFF
+	add x2, x2, l_anon.757e4453bdfd2025643d21437d3351a7.13@PAGEOFF
 	mov x0, x9
 	mov x1, x28
 	bl core::panicking::panic_bounds_check
@@ -723,23 +723,23 @@ LBB13_89:
 		// /rustc/2f2c438dce75d8cc532c3baa849eeddc0901802c/library/core/src/slice/index.rs : 258
 		&(*slice)[self]
 Lloh14:
-	adrp x2, l_anon.59be6f2441934e95d79b4ac6bac88412.12@PAGE
+	adrp x2, l_anon.757e4453bdfd2025643d21437d3351a7.12@PAGE
 Lloh15:
-	add x2, x2, l_anon.59be6f2441934e95d79b4ac6bac88412.12@PAGEOFF
+	add x2, x2, l_anon.757e4453bdfd2025643d21437d3351a7.12@PAGEOFF
 	mov x1, x23
 	bl core::panicking::panic_bounds_check
 LBB13_90:
 		// /rustc/2f2c438dce75d8cc532c3baa849eeddc0901802c/library/core/src/slice/index.rs : 264
 		&mut (*slice)[self]
 Lloh16:
-	adrp x2, l_anon.59be6f2441934e95d79b4ac6bac88412.13@PAGE
+	adrp x2, l_anon.757e4453bdfd2025643d21437d3351a7.13@PAGE
 Lloh17:
-	add x2, x2, l_anon.59be6f2441934e95d79b4ac6bac88412.13@PAGEOFF
+	add x2, x2, l_anon.757e4453bdfd2025643d21437d3351a7.13@PAGEOFF
 	mov x0, x8
 	mov x1, x26
 	bl core::panicking::panic_bounds_check
 LBB13_91:
-		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/fast.rs : 66
+		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/fast.rs : 69
 		}
 	ldp x29, x30, [sp, #336]
 	ldp x20, x19, [sp, #320]
@@ -751,7 +751,7 @@ LBB13_91:
 	ret
 LBB13_92:
 	ldr x9, [sp, #40]
-		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 59
+		// /Users/kmatsui/Library/CloudStorage/Dropbox/GitHub/ken-matsui/fast-matmul/src/matrix.rs : 54
 		self.inner[j * self.row + i]
 	add x10, x16, x9
 		// /rustc/2f2c438dce75d8cc532c3baa849eeddc0901802c/library/core/src/slice/index.rs : 258
@@ -759,29 +759,29 @@ LBB13_92:
 	cmp x10, x28
 	b.hs LBB13_94
 Lloh18:
-	adrp x2, l_anon.59be6f2441934e95d79b4ac6bac88412.12@PAGE
+	adrp x2, l_anon.757e4453bdfd2025643d21437d3351a7.12@PAGE
 Lloh19:
-	add x2, x2, l_anon.59be6f2441934e95d79b4ac6bac88412.12@PAGEOFF
+	add x2, x2, l_anon.757e4453bdfd2025643d21437d3351a7.12@PAGEOFF
 	mov x0, x8
 	mov x1, x26
 	bl core::panicking::panic_bounds_check
 LBB13_94:
 Lloh20:
-	adrp x2, l_anon.59be6f2441934e95d79b4ac6bac88412.12@PAGE
+	adrp x2, l_anon.757e4453bdfd2025643d21437d3351a7.12@PAGE
 Lloh21:
-	add x2, x2, l_anon.59be6f2441934e95d79b4ac6bac88412.12@PAGEOFF
+	add x2, x2, l_anon.757e4453bdfd2025643d21437d3351a7.12@PAGEOFF
 	mov x0, x10
 	mov x1, x28
 	bl core::panicking::panic_bounds_check
 LBB13_95:
 Lloh22:
-	adrp x0, l_anon.59be6f2441934e95d79b4ac6bac88412.2@PAGE
+	adrp x0, l_anon.757e4453bdfd2025643d21437d3351a7.2@PAGE
 Lloh23:
-	add x0, x0, l_anon.59be6f2441934e95d79b4ac6bac88412.2@PAGEOFF
+	add x0, x0, l_anon.757e4453bdfd2025643d21437d3351a7.2@PAGEOFF
 Lloh24:
-	adrp x2, l_anon.59be6f2441934e95d79b4ac6bac88412.4@PAGE
+	adrp x2, l_anon.757e4453bdfd2025643d21437d3351a7.4@PAGE
 Lloh25:
-	add x2, x2, l_anon.59be6f2441934e95d79b4ac6bac88412.4@PAGEOFF
+	add x2, x2, l_anon.757e4453bdfd2025643d21437d3351a7.4@PAGEOFF
 	mov w1, #27
 	bl core::panicking::panic
 

@@ -53,6 +53,9 @@ pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matr
                         //
                         for pr in 0..min(param.kc, Ac.col /* or Bc.row */) {
                             for j in jr..Bc.col {
+                                // This assert lets the compiler optimize out the bounds checks.
+                                assert!(j * Bc.row + pr < Bc.inner.len());
+
                                 for i in ir..Ac.row {
                                     *C.get_ref_mut(i + ic, j + jc) += Ac.get(i, pr) * Bc.get(pr, j);
                                 }

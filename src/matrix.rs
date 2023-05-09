@@ -14,7 +14,7 @@ pub struct Matrix {
     pub(crate) row: usize,
     pub(crate) col: usize,
 
-    inner: Vec<Value>,
+    pub(crate) inner: Vec<Value>,
 }
 
 impl Matrix {
@@ -51,16 +51,10 @@ impl Matrix {
 
     #[inline(always)]
     pub fn get(&self, i: usize, j: usize) -> Value {
-        // This assert lets the compiler optimize out the bounds checks.
-        assert!(j * self.row + i < self.inner.len());
-
         self.inner[j * self.row + i]
     }
     #[inline(always)]
     pub fn get_ref_mut(&mut self, i: usize, j: usize) -> &mut Value {
-        // This assert lets the compiler optimize out the bounds checks.
-        assert!(j * self.row + i < self.inner.len());
-
         &mut self.inner[j * self.row + i]
     }
     #[inline(always)]

@@ -3,7 +3,7 @@
 use crate::matrix::Matrix;
 
 pub(crate) fn expected_8x8() -> Matrix {
-    let mut Expected = Matrix::new(8, 8);
+    let mut Expected = Matrix::zero_new(8, 8);
     Expected.insert(0, 0, 1120);
     Expected.insert(1, 0, 1148);
     Expected.insert(2, 0, 1176);

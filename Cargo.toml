@@ -9,6 +9,7 @@ edition = "2021"
 debug_print = "1.0"
 fake = "2.5.0"
 mimalloc = { version = "*", default-features = false } # disable secure mode
+cfg-if = "0.1"
 
 [dev-dependencies]
 criterion = { version = "0.4.0", features = ["real_blackbox"] }

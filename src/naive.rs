@@ -21,9 +21,9 @@ mod tests {
         let k: usize = 8;
         let n: usize = 8;
 
-        let A = Matrix::serial_new(m, k);
-        let B = Matrix::serial_new(k, n);
-        let mut C = Matrix::new(m, n);
+        let A = Matrix::seq_new(m, k);
+        let B = Matrix::seq_new(k, n);
+        let mut C = Matrix::zero_new(m, n);
 
         matmul(m, k, n, &A, &B, &mut C);
         assert_eq!(C, expected_8x8());

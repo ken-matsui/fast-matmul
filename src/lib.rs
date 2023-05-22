@@ -5,6 +5,8 @@
 pub mod fast;
 mod matrix;
 pub mod naive;
+pub mod param;
 mod test_util;
 
 pub use matrix::Matrix;
+pub use param::Param;

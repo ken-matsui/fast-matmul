@@ -18,7 +18,8 @@ pub struct Matrix {
 }
 
 impl Matrix {
-    pub fn new(row: usize, col: usize) -> Self {
+    /// Initialize with 0
+    pub fn zero_new(row: usize, col: usize) -> Self {
         Matrix {
             row,
             col,
@@ -26,9 +27,17 @@ impl Matrix {
             inner: vec![Value::default(); row * col],
         }
     }
-    /// for debug
-    pub fn serial_new(row: usize, col: usize) -> Self {
-        let mut matrix = Self::new(row, col);
+    /// Initialize with 1
+    pub fn one_new(row: usize, col: usize) -> Self {
+        Matrix {
+            row,
+            col,
+            inner: vec![1; row * col],
+        }
+    }
+    /// Initialize with sequential numbers
+    pub fn seq_new(row: usize, col: usize) -> Self {
+        let mut matrix = Self::zero_new(row, col);
 
         let mut num: Value = 0;
         for j in 0..col {
@@ -40,8 +49,8 @@ impl Matrix {
 
         matrix
     }
-    /// for benchmark
-    pub fn random_new(row: usize, col: usize) -> Self {
+    /// Initialize with random numbers
+    pub fn rand_new(row: usize, col: usize) -> Self {
         Matrix {
             row,
             col,
@@ -57,6 +66,16 @@ impl Matrix {
     pub fn get_ref_mut(&mut self, i: usize, j: usize) -> &mut Value {
         unsafe { &mut *self.inner.get_unchecked_mut(j * self.row + i) }
     }
+
+    #[inline(always)]
+    pub fn as_ptr(&self) -> *const Value {
+        self.inner.as_ptr()
+    }
+    #[inline(always)]
+    pub fn get_ptr(&self, i: usize, j: usize) -> *const Value {
+        unsafe { self.as_ptr().add(j * self.row + i) }
+    }
+
     #[inline(always)]
     pub fn insert(&mut self, i: usize, j: usize, val: Value) {
         *self.get_ref_mut(i, j) = val;
@@ -67,7 +86,7 @@ impl Matrix {
     ///
     /// For better performance, this method does not check if arguments are out of bounds.
     pub fn pack_into(&self, i_from: usize, i_to: usize, j_from: usize, j_to: usize) -> Matrix {
-        let mut copy = Matrix::new(i_to - i_from, j_to - j_from);
+        let mut copy = Matrix::zero_new(i_to - i_from, j_to - j_from);
         for j in j_from..j_to {
             for i in i_from..i_to {
                 copy.insert(i - i_from, j - j_from, *self.get(i, j));

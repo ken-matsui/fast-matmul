@@ -3,36 +3,8 @@ use std::fmt::{self, Display, Formatter};
 
 // use debug_print::{debug_print as dprint, debug_println as dprintln};
 
-use crate::Matrix;
-
-#[derive(Copy, Clone)]
-pub struct Param {
-    pub nc: usize,
-    pub mc: usize,
-    pub kc: usize,
-}
-
-impl Default for Param {
-    fn default() -> Self {
-        Self {
-            nc: 1000,
-            mc: 64,
-            kc: 32,
-        }
-    }
-}
-
-impl Param {
-    pub fn new(nc: usize, mc: usize, kc: usize) -> Self {
-        Self { nc, mc, kc }
-    }
-}
-
-impl Display for Param {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "(nc: {}, mc: {}, kc: {})", self.nc, self.mc, self.kc)
-    }
-}
+use crate::param::BEST_PARAM;
+use crate::{Matrix, Param};
 
 pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matrix, param: Param) {
     for jc in (0..n).step_by(param.nc) {
@@ -65,23 +37,28 @@ pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matr
     }
 }
 
+pub fn best_matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matrix) {
+    matmul(m, k, n, A, B, C, BEST_PARAM);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::naive;
+    use itertools::iproduct;
 
-    fn matmul_helper(size: usize) {
+    fn matmul_helper(size: usize, param: Param) {
         let m: usize = size;
         let k: usize = size;
         let n: usize = size;
 
-        let A = Matrix::serial_new(m, k);
-        let B = Matrix::serial_new(k, n);
-        let mut C = Matrix::new(m, n);
+        let A = Matrix::seq_new(m, k);
+        let B = Matrix::seq_new(k, n);
+        let mut C = Matrix::zero_new(m, n);
 
-        matmul(m, k, n, &A, &B, &mut C, Param::default());
+        matmul(m, k, n, &A, &B, &mut C, param);
 
-        let mut C2 = Matrix::new(m, n);
+        let mut C2 = Matrix::zero_new(m, n);
         naive::matmul(m, k, n, &A, &B, &mut C2);
 
         assert_eq!(C, C2);
@@ -92,7 +69,7 @@ mod tests {
         // simple cases: until the smallest step
         // no step_by occurs, meaning this is the same with iterating by 1
         for size in 1..Param::default().kc {
-            matmul_helper(size);
+            matmul_helper(size, Param::default());
         }
     }
 
@@ -100,12 +77,30 @@ mod tests {
     fn test_matmul() {
         let mut i: usize = 2;
         loop {
-            matmul_helper(i);
+            matmul_helper(i, Param::default());
             i = i.pow(2);
 
             if i > 128 {
                 break;
             }
         }
+    }
+
+    #[test]
+    fn test_small_pack_matmul() {
+        let range = 0..=8; // 2^(0..=8) = 1..=256
+        for (nc_exp, mc_exp, kc_exp) in iproduct!(range.clone(), range.clone(), range) {
+            let param = Param::new(
+                2_usize.pow(nc_exp),
+                2_usize.pow(mc_exp),
+                2_usize.pow(kc_exp),
+            );
+            matmul_helper(256, param);
+        }
+    }
+
+    #[test]
+    fn test_large_matmul() {
+        matmul_helper(2048, BEST_PARAM);
     }
 }

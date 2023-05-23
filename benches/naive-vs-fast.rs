@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use fast_matmul::{fast::Param, *};
+use fast_matmul::*;
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
 
@@ -11,26 +11,24 @@ fn bench(c: &mut Criterion) {
     for size in [2048].iter() {
         group.throughput(Throughput::Elements(*size as u64));
 
-        let param = Param::new(128, 1024, 1);
-        let A = Matrix::random_new(*size, *size);
-        let B = Matrix::random_new(*size, *size);
+        let A = Matrix::rand_new(*size, *size);
+        let B = Matrix::rand_new(*size, *size);
 
         group.bench_with_input(BenchmarkId::new("fast", size), size, |b, size| {
-            let mut C = Matrix::new(*size, *size);
+            let mut C = Matrix::zero_new(*size, *size);
             b.iter(|| {
-                black_box(fast::matmul(
+                black_box(fast::best_matmul(
                     *size,
                     *size,
                     *size,
                     black_box(&A),
                     black_box(&B),
                     black_box(&mut C),
-                    param,
                 ))
             })
         });
         group.bench_with_input(BenchmarkId::new("naive", size), size, |b, size| {
-            let mut C = Matrix::new(*size, *size);
+            let mut C = Matrix::zero_new(*size, *size);
             b.iter(|| {
                 black_box(naive::matmul(
                     *size,

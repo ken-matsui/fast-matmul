@@ -19,7 +19,7 @@ cargo criterion --bench naive-vs-fast
 ```
 
 ```shell
-cargo criterion --bench best-params
+cargo criterion --bench auto-tuning
 ```
 
 ## Reports

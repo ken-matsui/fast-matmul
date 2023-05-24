@@ -2,7 +2,7 @@
 
 use itertools::iproduct;
 
-use fast_matmul::{fast::Param, *};
+use fast_matmul::*;
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 

@@ -124,7 +124,7 @@ mod tests {
             let A0: uint32x4_t = vld1q_u32(A.get_ptr(i, j));
             let A1: uint32x4_t = vld1q_u32(A.get_ptr(i, j + 1));
             let A2: uint32x4_t = vld1q_u32(A.get_ptr(i, j + 2));
-            let A3: uint32x4_t = vld1q_u32(A.get_ptr(0, 3));
+            let A3: uint32x4_t = vld1q_u32(A.get_ptr(i, j + 3));
 
             let B0: uint32x4_t = vld1q_u32(B.get_ptr(i, j));
             let B1: uint32x4_t = vld1q_u32(B.get_ptr(i, j + 1));
@@ -159,6 +159,63 @@ mod tests {
             C3 = vmlaq_laneq_u32(C3, A2, B3, 2);
             C3 = vmlaq_laneq_u32(C3, A3, B3, 3);
             vst1q_u32(C.get_mut_ptr(i, j + 3), C3);
+        }
+
+        let mut C2 = Matrix::zero_new(size, size);
+        naive::matmul(size, size, size, &A, &B, &mut C2);
+        assert_eq!(C, C2);
+    }
+
+    #[cfg(target_arch = "x86_64")]
+    fn test_simd_matmul_4x4() {
+        use std::arch::x86_64::*;
+
+        let size = 4;
+        let A = Matrix::seq_new(size, size);
+        let B = Matrix::seq_new(size, size);
+        let mut C = Matrix::zero_new(size, size);
+
+        let i = 0;
+        let j = 0;
+        unsafe {
+            let A0: __m128i = _mm_loadu_si128(A.get_ptr(i, j) as *const _);
+            let A1: __m128i = _mm_loadu_si128(A.get_ptr(i, j + 1) as *const _);
+            let A2: __m128i = _mm_loadu_si128(A.get_ptr(i, j + 2) as *const _);
+            let A3: __m128i = _mm_loadu_si128(A.get_ptr(i, j + 3) as *const _);
+
+            let B0: __m128i = _mm_loadu_si128(B.get_ptr(i, j) as *const _);
+            let B1: __m128i = _mm_loadu_si128(B.get_ptr(i, j + 1) as *const _);
+            let B2: __m128i = _mm_loadu_si128(B.get_ptr(i, j + 2) as *const _);
+            let B3: __m128i = _mm_loadu_si128(B.get_ptr(i, j + 3) as *const _);
+
+            let mut C0: __m128i = _mm_loadu_si128(C.get_ptr(i, j) as *const _);
+            let mut C1: __m128i = _mm_loadu_si128(C.get_ptr(i, j + 1) as *const _);
+            let mut C2: __m128i = _mm_loadu_si128(C.get_ptr(i, j + 2) as *const _);
+            let mut C3: __m128i = _mm_loadu_si128(C.get_ptr(i, j + 3) as *const _);
+
+            C0 = _mm_add_epi32(C0, _mm_mullo_epi32(A0, B0));
+            C0 = _mm_add_epi32(C0, _mm_mullo_epi32(A1, B0));
+            C0 = _mm_add_epi32(C0, _mm_mullo_epi32(A2, B0));
+            C0 = _mm_add_epi32(C0, _mm_mullo_epi32(A3, B0));
+            _mm_storeu_si128(C.get_mut_ptr(i, j) as *mut _, C0);
+
+            C1 = _mm_add_epi32(C1, _mm_mullo_epi32(A0, B1));
+            C1 = _mm_add_epi32(C1, _mm_mullo_epi32(A1, B1));
+            C1 = _mm_add_epi32(C1, _mm_mullo_epi32(A2, B1));
+            C1 = _mm_add_epi32(C1, _mm_mullo_epi32(A3, B1));
+            _mm_storeu_si128(C.get_mut_ptr(i, j + 1) as *mut _, C1);
+
+            C2 = _mm_add_epi32(C2, _mm_mullo_epi32(A0, B2));
+            C2 = _mm_add_epi32(C2, _mm_mullo_epi32(A1, B2));
+            C2 = _mm_add_epi32(C2, _mm_mullo_epi32(A2, B2));
+            C2 = _mm_add_epi32(C2, _mm_mullo_epi32(A3, B2));
+            _mm_storeu_si128(C.get_mut_ptr(i, j + 2) as *mut _, C2);
+
+            C3 = _mm_add_epi32(C3, _mm_mullo_epi32(A0, B3));
+            C3 = _mm_add_epi32(C3, _mm_mullo_epi32(A1, B3));
+            C3 = _mm_add_epi32(C3, _mm_mullo_epi32(A2, B3));
+            C3 = _mm_add_epi32(C3, _mm_mullo_epi32(A3, B3));
+            _mm_storeu_si128(C.get_mut_ptr(i, j + 3) as *mut _, C3);
         }
 
         let mut C2 = Matrix::zero_new(size, size);

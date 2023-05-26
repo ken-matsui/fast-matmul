@@ -66,7 +66,7 @@ impl Matrix {
         unsafe { self.inner.get_unchecked(j * self.row + i) }
     }
     #[inline(always)]
-    pub fn get_ref_mut(&mut self, i: usize, j: usize) -> &mut Value {
+    pub fn get_mut(&mut self, i: usize, j: usize) -> &mut Value {
         unsafe { &mut *self.inner.get_unchecked_mut(j * self.row + i) }
     }
 
@@ -90,7 +90,7 @@ impl Matrix {
 
     #[inline(always)]
     pub fn insert(&mut self, i: usize, j: usize, val: Value) {
-        *self.get_ref_mut(i, j) = val;
+        *self.get_mut(i, j) = val;
     }
 
     /// Returns a copied matrix must be smaller than the original

@@ -32,4 +32,32 @@ mod tests {
         matmul(&A, &B, &mut C);
         assert_eq!(C, expected_8x8());
     }
+
+    #[test]
+    fn test_matmul_2() {
+        let size = 2;
+
+        let mut A = Matrix::zero_new(size, size);
+        A.insert(0, 0, 21);
+        A.insert(1, 0, 53);
+        A.insert(0, 1, 7);
+        A.insert(1, 1, 3);
+
+        let mut B = Matrix::zero_new(size, size);
+        B.insert(0, 0, 543);
+        B.insert(1, 0, 56);
+        B.insert(0, 1, 25);
+        B.insert(1, 1, 87);
+
+        let mut C = Matrix::zero_new(size, size);
+        matmul(&A, &B, &mut C);
+
+        let mut C2 = Matrix::zero_new(size, size);
+        C2.insert(0, 0, 12728);
+        C2.insert(1, 0, 5787);
+        C2.insert(0, 1, 3876);
+        C2.insert(1, 1, 653);
+
+        assert_eq!(C, C2);
+    }
 }

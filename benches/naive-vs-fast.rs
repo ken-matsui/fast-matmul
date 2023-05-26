@@ -31,9 +31,6 @@ fn bench(c: &mut Criterion) {
             let mut C = Matrix::zero_new(*size, *size);
             b.iter(|| {
                 black_box(naive::matmul(
-                    *size,
-                    *size,
-                    *size,
                     black_box(&A),
                     black_box(&B),
                     black_box(&mut C),

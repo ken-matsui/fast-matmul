@@ -1,6 +1,10 @@
 use crate::Matrix;
 
-pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matrix) {
+pub fn matmul(A: &Matrix, B: &Matrix, C: &mut Matrix) {
+    let m = A.row /* or C.row */;
+    let k = A.col /* or B.row */;
+    let n = B.col /* or C.col */;
+
     for i in 0..m {
         for j in 0..n {
             for p in 0..k {
@@ -25,7 +29,7 @@ mod tests {
         let B = Matrix::seq_new(k, n);
         let mut C = Matrix::zero_new(m, n);
 
-        matmul(m, k, n, &A, &B, &mut C);
+        matmul(&A, &B, &mut C);
         assert_eq!(C, expected_8x8());
     }
 }

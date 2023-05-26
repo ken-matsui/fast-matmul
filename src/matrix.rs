@@ -180,6 +180,6 @@ mod tests {
     fn test_pack_col_mjr_just_copy() {
         let matrix = Matrix::seq_new(4, 4);
         let copy = matrix.pack_col_mjr(0, 4, 0, 4);
-        assert_eq!(copy, matrix.trans(), "copy should be transposed");
+        assert_eq!(copy, matrix.transpose(), "copy should be transposed");
     }
 }

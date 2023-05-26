@@ -1,10 +1,10 @@
 /// Matrix Transpose
 use crate::Matrix;
 
-fn naive(m: usize, n: usize, A: &Matrix, B: &mut Matrix) {
+fn naive(m: usize, n: usize, In: &Matrix, Out: &mut Matrix) {
     for i in 0..m {
         for j in 0..n {
-            *B.get_ref_mut(j, i) = *A.get(i, j);
+            *Out.get_ref_mut(j, i) = *In.get(i, j);
         }
     }
 }
@@ -29,10 +29,10 @@ mod tests {
         let mut i: usize = 2;
         loop {
             let A = Matrix::rand_new(i, i);
-            let mut B = Matrix::rand_new(i, i);
+            let mut At = Matrix::rand_new(i, i);
 
-            naive(i, i, &A, &mut B);
-            assert!(is_transpose(i, i, &A, &B));
+            naive(i, i, &A, &mut At);
+            assert!(is_transpose(i, i, &A, &At));
             i = i.pow(2);
 
             if i > 2048 {

@@ -37,7 +37,7 @@ mod tests {
 
     #[test]
     fn test_trans_impl_1() {
-        let mut size: usize = 2;
+        let size: usize = 2;
 
         let mut A = Matrix::zero_new(size, size);
         A.insert(0, 0, 21);

@@ -1,4 +1,5 @@
 use std::fmt::{self, Display, Formatter};
+use std::ops::Index;
 
 use mimalloc::MiMalloc;
 
@@ -118,6 +119,45 @@ impl Matrix {
             }
         }
         copy
+    }
+}
+
+#[macro_export]
+macro_rules! matrix {
+    ($([$($x:expr),* $(,)*]),+ $(,)*) => {{
+        $crate::Matrix::from(vec![$([$($x,)*],)*])
+    }};
+}
+
+trait FixedArray: Index<usize, Output = Value> {
+    fn len() -> usize;
+}
+macro_rules! impl_arr_init {
+    (__impl $n: expr) => (
+        impl FixedArray for [Value; $n] {
+            fn len() -> usize { $n }
+        }
+    );
+    () => ();
+    ($n: expr, $($m:expr,)*) => (
+        impl_arr_init!(__impl $n);
+        impl_arr_init!($($m,)*);
+    )
+}
+impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
+
+impl<V: FixedArray> From<Vec<V>> for Matrix {
+    fn from(value: Vec<V>) -> Self {
+        let row = V::len();
+        let col = value.len();
+
+        let mut matrix = Matrix::zero_new(row, col);
+        for j in 0..col {
+            for i in 0..row {
+                matrix.insert(i, j, value[j][i]);
+            }
+        }
+        matrix
     }
 }
 

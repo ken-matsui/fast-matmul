@@ -40,7 +40,7 @@ mod tests {
         let mut size: usize = 2;
         loop {
             let A = Matrix::rand_new(size, size);
-            let mut At = A.transpose();
+            let At = A.transpose();
 
             assert!(is_transpose(size, size, &A, &At));
             size = size.pow(2);

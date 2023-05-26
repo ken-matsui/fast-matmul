@@ -1,7 +1,7 @@
 /// Matrix Transpose
 use crate::Matrix;
 
-fn naive(m: usize, n: usize, In: &Matrix, Out: &mut Matrix) {
+pub(crate) fn naive(m: usize, n: usize, In: &Matrix, Out: &mut Matrix) {
     for i in 0..m {
         for j in 0..n {
             *Out.get_ref_mut(j, i) = *In.get(i, j);
@@ -26,16 +26,16 @@ mod tests {
 
     #[test]
     fn test_naive() {
-        let mut i: usize = 2;
+        let mut size: usize = 2;
         loop {
-            let A = Matrix::rand_new(i, i);
-            let mut At = Matrix::rand_new(i, i);
+            let A = Matrix::rand_new(size, size);
+            let mut At = Matrix::rand_new(size, size);
 
-            naive(i, i, &A, &mut At);
-            assert!(is_transpose(i, i, &A, &At));
-            i = i.pow(2);
+            naive(size, size, &A, &mut At);
+            assert!(is_transpose(size, size, &A, &At));
+            size = size.pow(2);
 
-            if i > 2048 {
+            if size > 2048 {
                 break;
             }
         }

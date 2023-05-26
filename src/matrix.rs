@@ -72,8 +72,17 @@ impl Matrix {
         self.inner.as_ptr()
     }
     #[inline(always)]
+    pub fn as_mut_ptr(&mut self) -> *mut Value {
+        self.inner.as_mut_ptr()
+    }
+
+    #[inline(always)]
     pub fn get_ptr(&self, i: usize, j: usize) -> *const Value {
         unsafe { self.as_ptr().add(j * self.row + i) }
+    }
+    #[inline(always)]
+    pub fn get_mut_ptr(&mut self, i: usize, j: usize) -> *mut Value {
+        unsafe { self.as_mut_ptr().add(j * self.row + i) }
     }
 
     #[inline(always)]

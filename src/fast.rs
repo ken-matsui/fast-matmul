@@ -1,5 +1,9 @@
 use std::cmp::min;
-use std::fmt::{self, Display, Formatter};
+
+#[cfg(target_arch = "aarch64")]
+use core::arch::aarch64::*;
+#[cfg(target_arch = "x86_64")]
+use std::arch::x86_64::*;
 
 // use debug_print::{debug_print as dprint, debug_println as dprintln};
 
@@ -54,8 +58,8 @@ mod tests {
 
         let A = Matrix::seq_new(m, k);
         let B = Matrix::seq_new(k, n);
-        let mut C = Matrix::zero_new(m, n);
 
+        let mut C = Matrix::zero_new(m, n);
         matmul(m, k, n, &A, &B, &mut C, param);
 
         let mut C2 = Matrix::zero_new(m, n);
@@ -102,5 +106,63 @@ mod tests {
     #[test]
     fn test_large_matmul() {
         matmul_helper(2048, BEST_PARAM);
+    }
+
+    #[cfg(target_arch = "aarch64")]
+    #[test]
+    fn test_simd_matmul_4x4() {
+        use core::arch::aarch64::*;
+
+        let size = 4;
+        let A = Matrix::seq_new(size, size);
+        let B = Matrix::seq_new(size, size);
+        let mut C = Matrix::zero_new(size, size);
+
+        let i = 0;
+        let j = 0;
+        unsafe {
+            let A0: uint32x4_t = vld1q_u32(A.get_ptr(i, j));
+            let A1: uint32x4_t = vld1q_u32(A.get_ptr(i, j + 1));
+            let A2: uint32x4_t = vld1q_u32(A.get_ptr(i, j + 2));
+            let A3: uint32x4_t = vld1q_u32(A.get_ptr(0, 3));
+
+            let B0: uint32x4_t = vld1q_u32(B.get_ptr(i, j));
+            let B1: uint32x4_t = vld1q_u32(B.get_ptr(i, j + 1));
+            let B2: uint32x4_t = vld1q_u32(B.get_ptr(i, j + 2));
+            let B3: uint32x4_t = vld1q_u32(B.get_ptr(i, j + 3));
+
+            let mut C0: uint32x4_t = vld1q_u32(C.get_ptr(i, j));
+            let mut C1: uint32x4_t = vld1q_u32(C.get_ptr(i, j + 1));
+            let mut C2: uint32x4_t = vld1q_u32(C.get_ptr(i, j + 2));
+            let mut C3: uint32x4_t = vld1q_u32(C.get_ptr(i, j + 3));
+
+            C0 = vmlaq_laneq_u32(C0, A0, B0, 0);
+            C0 = vmlaq_laneq_u32(C0, A1, B0, 1);
+            C0 = vmlaq_laneq_u32(C0, A2, B0, 2);
+            C0 = vmlaq_laneq_u32(C0, A3, B0, 3);
+            vst1q_u32(C.get_mut_ptr(i, j), C0);
+
+            C1 = vmlaq_laneq_u32(C1, A0, B1, 0);
+            C1 = vmlaq_laneq_u32(C1, A1, B1, 1);
+            C1 = vmlaq_laneq_u32(C1, A2, B1, 2);
+            C1 = vmlaq_laneq_u32(C1, A3, B1, 3);
+            vst1q_u32(C.get_mut_ptr(i, j + 1), C1);
+
+            C2 = vmlaq_laneq_u32(C2, A0, B2, 0);
+            C2 = vmlaq_laneq_u32(C2, A1, B2, 1);
+            C2 = vmlaq_laneq_u32(C2, A2, B2, 2);
+            C2 = vmlaq_laneq_u32(C2, A3, B2, 3);
+            vst1q_u32(C.get_mut_ptr(i, j + 2), C2);
+
+            C3 = vmlaq_laneq_u32(C3, A0, B3, 0);
+            C3 = vmlaq_laneq_u32(C3, A1, B3, 1);
+            C3 = vmlaq_laneq_u32(C3, A2, B3, 2);
+            C3 = vmlaq_laneq_u32(C3, A3, B3, 3);
+            vst1q_u32(C.get_mut_ptr(i, j + 3), C3);
+        }
+
+        let mut C2 = Matrix::zero_new(size, size);
+        naive::matmul(size, size, size, &A, &B, &mut C2);
+        assert_eq!(C, C2);
     }
 }

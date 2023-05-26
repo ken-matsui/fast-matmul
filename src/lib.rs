@@ -7,6 +7,7 @@ mod matrix;
 pub mod naive;
 pub mod param;
 mod test_util;
+pub(crate) mod trans;
 
 pub use matrix::Matrix;
 pub use param::Param;

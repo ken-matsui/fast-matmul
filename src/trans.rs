@@ -9,6 +9,14 @@ pub(crate) fn naive(m: usize, n: usize, In: &Matrix, Out: &mut Matrix) {
     }
 }
 
+impl Matrix {
+    pub(crate) fn trans(&self) -> Matrix {
+        let mut tmp = Matrix::zero_new(self.row, self.col);
+        naive(self.row, self.col, self, &mut tmp);
+        tmp
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -22,6 +30,22 @@ mod tests {
             }
         }
         true
+    }
+
+    #[test]
+    fn test_trans_impl() {
+        let mut size: usize = 2;
+        loop {
+            let A = Matrix::rand_new(size, size);
+            let mut At = A.trans();
+
+            assert!(is_transpose(size, size, &A, &At));
+            size = size.pow(2);
+
+            if size > 2048 {
+                break;
+            }
+        }
     }
 
     #[test]

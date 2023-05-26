@@ -14,7 +14,7 @@ pub(crate) fn naive(In: &Matrix, Out: &mut Matrix) {
 
 impl Matrix {
     pub(crate) fn transpose(&self) -> Matrix {
-        let mut tmp = Matrix::zero_new(self.row, self.col);
+        let mut tmp = Matrix::zero_new(self.col, self.row);
         naive(self, &mut tmp);
         tmp
     }
@@ -52,6 +52,16 @@ mod tests {
     }
 
     #[test]
+    fn test_trans_impl_imbalanced() {
+        let m = 2;
+        let n = 4;
+
+        let A = Matrix::rand_new(m, n);
+        let At = A.transpose();
+        assert!(is_transpose(m, n, &A, &At));
+    }
+
+    #[test]
     fn test_naive() {
         let mut size: usize = 2;
         loop {
@@ -66,5 +76,19 @@ mod tests {
                 break;
             }
         }
+    }
+
+    #[test]
+    fn test_naive_imbalanced() {
+        let m = 2;
+        let n = 4;
+
+        let A = Matrix::rand_new(m, n);
+        let mut At = Matrix::rand_new(n, m);
+        println!("{}", A);
+        println!("{}", At);
+
+        naive(&A, &mut At);
+        assert!(is_transpose(m, n, &A, &At));
     }
 }

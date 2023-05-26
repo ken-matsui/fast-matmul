@@ -10,7 +10,7 @@ pub(crate) fn naive(m: usize, n: usize, In: &Matrix, Out: &mut Matrix) {
 }
 
 impl Matrix {
-    pub(crate) fn trans(&self) -> Matrix {
+    pub(crate) fn transpose(&self) -> Matrix {
         let mut tmp = Matrix::zero_new(self.row, self.col);
         naive(self.row, self.col, self, &mut tmp);
         tmp
@@ -37,7 +37,7 @@ mod tests {
         let mut size: usize = 2;
         loop {
             let A = Matrix::rand_new(size, size);
-            let mut At = A.trans();
+            let mut At = A.transpose();
 
             assert!(is_transpose(size, size, &A, &At));
             size = size.pow(2);

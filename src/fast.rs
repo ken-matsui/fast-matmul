@@ -136,28 +136,28 @@ mod tests {
             let mut C2: uint32x4_t = vld1q_u32(C.get_ptr(i, j + 2));
             let mut C3: uint32x4_t = vld1q_u32(C.get_ptr(i, j + 3));
 
-            C0 = vmlaq_laneq_u32(C0, A0, B0, 0);
-            C0 = vmlaq_laneq_u32(C0, A1, B0, 1);
-            C0 = vmlaq_laneq_u32(C0, A2, B0, 2);
-            C0 = vmlaq_laneq_u32(C0, A3, B0, 3);
+            C0 = vmlaq_laneq_u32::<0>(C0, A0, B0);
+            C0 = vmlaq_laneq_u32::<1>(C0, A1, B0);
+            C0 = vmlaq_laneq_u32::<2>(C0, A2, B0);
+            C0 = vmlaq_laneq_u32::<3>(C0, A3, B0);
             vst1q_u32(C.get_mut_ptr(i, j), C0);
 
-            C1 = vmlaq_laneq_u32(C1, A0, B1, 0);
-            C1 = vmlaq_laneq_u32(C1, A1, B1, 1);
-            C1 = vmlaq_laneq_u32(C1, A2, B1, 2);
-            C1 = vmlaq_laneq_u32(C1, A3, B1, 3);
+            C1 = vmlaq_laneq_u32::<0>(C1, A0, B1);
+            C1 = vmlaq_laneq_u32::<1>(C1, A1, B1);
+            C1 = vmlaq_laneq_u32::<2>(C1, A2, B1);
+            C1 = vmlaq_laneq_u32::<3>(C1, A3, B1);
             vst1q_u32(C.get_mut_ptr(i, j + 1), C1);
 
-            C2 = vmlaq_laneq_u32(C2, A0, B2, 0);
-            C2 = vmlaq_laneq_u32(C2, A1, B2, 1);
-            C2 = vmlaq_laneq_u32(C2, A2, B2, 2);
-            C2 = vmlaq_laneq_u32(C2, A3, B2, 3);
+            C2 = vmlaq_laneq_u32::<0>(C2, A0, B2);
+            C2 = vmlaq_laneq_u32::<1>(C2, A1, B2);
+            C2 = vmlaq_laneq_u32::<2>(C2, A2, B2);
+            C2 = vmlaq_laneq_u32::<3>(C2, A3, B2);
             vst1q_u32(C.get_mut_ptr(i, j + 2), C2);
 
-            C3 = vmlaq_laneq_u32(C3, A0, B3, 0);
-            C3 = vmlaq_laneq_u32(C3, A1, B3, 1);
-            C3 = vmlaq_laneq_u32(C3, A2, B3, 2);
-            C3 = vmlaq_laneq_u32(C3, A3, B3, 3);
+            C3 = vmlaq_laneq_u32::<0>(C3, A0, B3);
+            C3 = vmlaq_laneq_u32::<1>(C3, A1, B3);
+            C3 = vmlaq_laneq_u32::<2>(C3, A2, B3);
+            C3 = vmlaq_laneq_u32::<3>(C3, A3, B3);
             vst1q_u32(C.get_mut_ptr(i, j + 3), C3);
         }
 

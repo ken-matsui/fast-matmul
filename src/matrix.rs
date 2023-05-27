@@ -13,12 +13,13 @@ type Value = u32;
 /// width: number of cols
 /// height: number of rows
 ///
+/// ```text
 ///         # of cols
 ///         ↓ ↓ ↓ ↓ ↓
 /// \#   -> □ □ □ □ □
 /// of   -> □ □ □ □ □
 /// rows -> □ □ □ □ □
-///
+/// ```
 #[derive(Debug, PartialEq)]
 pub struct Matrix {
     pub(crate) width: usize,
@@ -100,12 +101,13 @@ impl Matrix {
     ///
     /// e.g. row = 1, col = 2
     ///
+    /// ```text
     ///            col
     ///             ↓    
     ///         □ □ □ □ □
     ///  row -> □ □ ■ □ □
     ///         □ □ □ □ □
-    ///
+    /// ```
     #[inline(always)]
     pub fn get(&self, row: usize, col: usize) -> &Value {
         unsafe { self.inner.get_unchecked(idx!(self, row, col)) }

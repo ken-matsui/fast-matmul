@@ -1,7 +1,7 @@
 /// Matrix Transpose
 use crate::Matrix;
 
-pub(crate) fn naive(In: &Matrix, Out: &mut Matrix) {
+pub fn naive(In: &Matrix, Out: &mut Matrix) {
     for row in 0..In.height {
         for col in 0..In.width {
             *Out.get_mut(col, row) = *In.get(row, col);
@@ -10,7 +10,7 @@ pub(crate) fn naive(In: &Matrix, Out: &mut Matrix) {
 }
 
 impl Matrix {
-    pub(crate) fn transpose(&self) -> Matrix {
+    pub fn transpose(&self) -> Matrix {
         // width and height should be swapped
         let mut tmp = Matrix::zero_new(self.height, self.width);
         naive(self, &mut tmp);

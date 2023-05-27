@@ -40,15 +40,58 @@ pub fn matmul(A: &Matrix, B: &Matrix, C: &mut Matrix, param: Param) {
     }
 }
 
-pub fn best_matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matrix) {
-    matmul(m, k, n, A, B, C, BEST_PARAM);
+// NOTE: optimized for BEST_PARAM
+pub fn simd_matmul(A: &Matrix, B: &Matrix, C: &mut Matrix, param: Param) {
+    let m = A.height /* or C.row */;
+    let k = A.width /* or B.row */;
+    let n = B.width /* or C.col */;
+
+    for jc in (0..n).step_by(param.nc) {
+        for pc in (0..k).step_by(param.kc) {
+            let ik = min(pc + param.kc, k);
+            let Bc = B.pack_into(pc, ik, jc, min(jc + param.nc, n));
+
+            for ic in (0..m).step_by(param.mc) {
+                let Ac = A.pack_into(ic, min(ic + param.mc, m), pc, ik);
+                //
+                // Macrokernel
+                //
+                for jr in (0..param.nc).step_by(Bc.width /* nr */) {
+                    for ir in (0..param.mc).step_by(Ac.height /* mr */) {
+                        //
+                        // Microkernel
+                        //
+                        // Comment out because this is just a 1 loop
+                        for pr in /* 1 */ 0..min(param.kc, Ac.width /* or Bc.row */) {
+                            for j in /* 128 */ (jr..Bc.width).step_by(4) {
+                                for i in /* 1024 */ (ir..Ac.height).step_by(4) {
+                                    // #[cfg(target_arch = "aarch64")]
+                                    // unsafe {}
+                                    // #[cfg(target_arch = "aarch64")]
+                                    // use core::arch::aarch64::*;
+                                    // #[cfg(target_arch = "x86_64")]
+                                    // use std::arch::x86_64::*;
+
+                                    *C.get_mut(i + ic, j + jc) += Ac.get(i, pr) * Bc.get(pr, j);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub fn best_matmul(A: &Matrix, B: &Matrix, C: &mut Matrix) {
+    simd_matmul(A, B, C, BEST_PARAM);
 }
 
 #[cfg(test)]
 mod tests {
     use crate::param::BEST_PARAM;
     use crate::test_util::expected_8x8;
-    use crate::{fast, naive, Matrix, Param};
+    use crate::*;
     use itertools::iproduct;
 
     #[test]
@@ -150,118 +193,57 @@ mod tests {
         matmul_helper(2048, BEST_PARAM);
     }
 
-    #[cfg(target_arch = "aarch64")]
-    #[test]
-    fn test_simd_matmul_4x4() {
-        use core::arch::aarch64::*;
-
-        let size = 4;
-        let A = Matrix::seq_new(size, size);
-        let B = Matrix::seq_new(size, size);
-        let mut C = Matrix::zero_new(size, size);
-
-        let i = 0;
-        let j = 0;
-        unsafe {
-            let A0: uint32x4_t = vld1q_u32(A.get_ptr(i, j));
-            let A1: uint32x4_t = vld1q_u32(A.get_ptr(i, j + 1));
-            let A2: uint32x4_t = vld1q_u32(A.get_ptr(i, j + 2));
-            let A3: uint32x4_t = vld1q_u32(A.get_ptr(i, j + 3));
-
-            let B0: uint32x4_t = vld1q_u32(B.get_ptr(i, j));
-            let B1: uint32x4_t = vld1q_u32(B.get_ptr(i, j + 1));
-            let B2: uint32x4_t = vld1q_u32(B.get_ptr(i, j + 2));
-            let B3: uint32x4_t = vld1q_u32(B.get_ptr(i, j + 3));
-
-            let mut C0: uint32x4_t = vld1q_u32(C.get_ptr(i, j));
-            let mut C1: uint32x4_t = vld1q_u32(C.get_ptr(i, j + 1));
-            let mut C2: uint32x4_t = vld1q_u32(C.get_ptr(i, j + 2));
-            let mut C3: uint32x4_t = vld1q_u32(C.get_ptr(i, j + 3));
-
-            C0 = vmlaq_laneq_u32::<0>(C0, A0, B0);
-            C0 = vmlaq_laneq_u32::<1>(C0, A1, B0);
-            C0 = vmlaq_laneq_u32::<2>(C0, A2, B0);
-            C0 = vmlaq_laneq_u32::<3>(C0, A3, B0);
-            vst1q_u32(C.get_mut_ptr(i, j), C0);
-
-            C1 = vmlaq_laneq_u32::<0>(C1, A0, B1);
-            C1 = vmlaq_laneq_u32::<1>(C1, A1, B1);
-            C1 = vmlaq_laneq_u32::<2>(C1, A2, B1);
-            C1 = vmlaq_laneq_u32::<3>(C1, A3, B1);
-            vst1q_u32(C.get_mut_ptr(i, j + 1), C1);
-
-            C2 = vmlaq_laneq_u32::<0>(C2, A0, B2);
-            C2 = vmlaq_laneq_u32::<1>(C2, A1, B2);
-            C2 = vmlaq_laneq_u32::<2>(C2, A2, B2);
-            C2 = vmlaq_laneq_u32::<3>(C2, A3, B2);
-            vst1q_u32(C.get_mut_ptr(i, j + 2), C2);
-
-            C3 = vmlaq_laneq_u32::<0>(C3, A0, B3);
-            C3 = vmlaq_laneq_u32::<1>(C3, A1, B3);
-            C3 = vmlaq_laneq_u32::<2>(C3, A2, B3);
-            C3 = vmlaq_laneq_u32::<3>(C3, A3, B3);
-            vst1q_u32(C.get_mut_ptr(i, j + 3), C3);
-        }
-
-        let mut C2 = Matrix::zero_new(size, size);
-        naive::matmul(size, size, size, &A, &B, &mut C2);
-        assert_eq!(C, C2);
-    }
-
     #[cfg(target_arch = "x86_64")]
+    #[test]
     fn test_simd_matmul_4x4() {
         use std::arch::x86_64::*;
 
         let size = 4;
-        let A = Matrix::seq_new(size, size);
-        let B = Matrix::seq_new(size, size);
+        let A = Matrix::rand_new(size, size);
+        let B = Matrix::rand_new(size, size);
+        let Bt = B.transpose();
         let mut C = Matrix::zero_new(size, size);
 
-        let i = 0;
-        let j = 0;
-        unsafe {
-            let A0: __m128i = _mm_loadu_si128(A.get_ptr(i, j) as *const _);
-            let A1: __m128i = _mm_loadu_si128(A.get_ptr(i, j + 1) as *const _);
-            let A2: __m128i = _mm_loadu_si128(A.get_ptr(i, j + 2) as *const _);
-            let A3: __m128i = _mm_loadu_si128(A.get_ptr(i, j + 3) as *const _);
+        for i in 0..size {
+            for j in 0..size {
+                unsafe {
+                    let mut buffer = vec![0; 4];
+                    let mut vc = _mm_loadu_si128(buffer.as_ptr() as *const _);
 
-            let B0: __m128i = _mm_loadu_si128(B.get_ptr(i, j) as *const _);
-            let B1: __m128i = _mm_loadu_si128(B.get_ptr(i, j + 1) as *const _);
-            let B2: __m128i = _mm_loadu_si128(B.get_ptr(i, j + 2) as *const _);
-            let B3: __m128i = _mm_loadu_si128(B.get_ptr(i, j + 3) as *const _);
+                    for k in (0..size).step_by(4) {
+                        // load
+                        let va = _mm_loadu_si128(A.get_ptr(i, k) as *const _);
+                        let vb = _mm_loadu_si128(Bt.get_ptr(j, k) as *const _);
 
-            let mut C0: __m128i = _mm_loadu_si128(C.get_ptr(i, j) as *const _);
-            let mut C1: __m128i = _mm_loadu_si128(C.get_ptr(i, j + 1) as *const _);
-            let mut C2: __m128i = _mm_loadu_si128(C.get_ptr(i, j + 2) as *const _);
-            let mut C3: __m128i = _mm_loadu_si128(C.get_ptr(i, j + 3) as *const _);
+                        // multiply and add
+                        vc = _mm_add_epi32(vc, _mm_mullo_epi32(va, vb));
+                    }
 
-            C0 = _mm_add_epi32(C0, _mm_mullo_epi32(A0, B0));
-            C0 = _mm_add_epi32(C0, _mm_mullo_epi32(A1, B0));
-            C0 = _mm_add_epi32(C0, _mm_mullo_epi32(A2, B0));
-            C0 = _mm_add_epi32(C0, _mm_mullo_epi32(A3, B0));
-            _mm_storeu_si128(C.get_mut_ptr(i, j) as *mut _, C0);
-
-            C1 = _mm_add_epi32(C1, _mm_mullo_epi32(A0, B1));
-            C1 = _mm_add_epi32(C1, _mm_mullo_epi32(A1, B1));
-            C1 = _mm_add_epi32(C1, _mm_mullo_epi32(A2, B1));
-            C1 = _mm_add_epi32(C1, _mm_mullo_epi32(A3, B1));
-            _mm_storeu_si128(C.get_mut_ptr(i, j + 1) as *mut _, C1);
-
-            C2 = _mm_add_epi32(C2, _mm_mullo_epi32(A0, B2));
-            C2 = _mm_add_epi32(C2, _mm_mullo_epi32(A1, B2));
-            C2 = _mm_add_epi32(C2, _mm_mullo_epi32(A2, B2));
-            C2 = _mm_add_epi32(C2, _mm_mullo_epi32(A3, B2));
-            _mm_storeu_si128(C.get_mut_ptr(i, j + 2) as *mut _, C2);
-
-            C3 = _mm_add_epi32(C3, _mm_mullo_epi32(A0, B3));
-            C3 = _mm_add_epi32(C3, _mm_mullo_epi32(A1, B3));
-            C3 = _mm_add_epi32(C3, _mm_mullo_epi32(A2, B3));
-            C3 = _mm_add_epi32(C3, _mm_mullo_epi32(A3, B3));
-            _mm_storeu_si128(C.get_mut_ptr(i, j + 3) as *mut _, C3);
+                    // store
+                    _mm_storeu_si128(buffer.as_mut_ptr() as *mut _, vc);
+                    C.insert(i, j, buffer[0] + buffer[1] + buffer[2] + buffer[3]);
+                }
+            }
         }
 
         let mut C2 = Matrix::zero_new(size, size);
-        naive::matmul(size, size, size, &A, &B, &mut C2);
+        naive::matmul(&A, &B, &mut C2);
         assert_eq!(C, C2);
     }
+
+    // #[test]
+    // fn test_simd_matmul() {
+    //     let size = 2048;
+    //
+    //     let A = Matrix::seq_new(size, size);
+    //     let B = Matrix::seq_new(size, size);
+    //
+    //     let mut C = Matrix::zero_new(size, size);
+    //     simd_matmul(size, size, size, &A, &B, &mut C, BEST_PARAM);
+    //
+    //     let mut C2 = Matrix::zero_new(size, size);
+    //     matmul(size, size, size, &A, &B, &mut C2, BEST_PARAM);
+    //
+    //     assert_eq!(C, C2);
+    // }
 }

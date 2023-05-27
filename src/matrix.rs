@@ -81,6 +81,20 @@ impl Matrix {
         }
     }
 
+    /// Initialize with small random numbers that do not occur overflows
+    #[inline(always)]
+    pub fn small_rand_new(width: usize, height: usize) -> Self {
+        use rand::distributions;
+        let sampler = distributions::Uniform::new_inclusive(1, 10);
+
+        Matrix {
+            width,
+            height,
+
+            inner: fake::vec![Value as sampler; width * height],
+        }
+    }
+
     /// row: position at rows
     /// col: position at cols
     ///
@@ -257,6 +271,17 @@ mod tests {
         assert_eq!(matrix.width, 3);
         assert_eq!(matrix.height, 9);
         assert_eq!(matrix.inner.len(), 27);
+    }
+
+    #[test]
+    fn test_small_rand_new() {
+        let matrix = Matrix::small_rand_new(9, 3);
+        assert_eq!(matrix.width, 9);
+        assert_eq!(matrix.height, 3);
+        assert_eq!(matrix.inner.len(), 27);
+        for elem in matrix.inner {
+            assert!(elem >= 1 && elem <= 10);
+        }
     }
 
     #[test]

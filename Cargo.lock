@@ -213,6 +213,7 @@ dependencies = [
  "fake",
  "itertools",
  "mimalloc",
+ "rand",
 ]
 
 [[package]]

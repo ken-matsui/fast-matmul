@@ -1,14 +1,12 @@
 use std::cmp::min;
 
-// use debug_print::{debug_print as dprint, debug_println as dprintln};
-
 use crate::param::BEST_PARAM;
 use crate::{Matrix, Param};
 
 pub fn matmul(A: &Matrix, B: &Matrix, C: &mut Matrix, param: Param) {
-    let m = A.height /* or C.row */;
-    let k = A.width /* or B.row */;
-    let n = B.width /* or C.col */;
+    let m = A.height /* = C.height */;
+    let k = B.height /* = A.width */;
+    let n = C.width /* = B.width */;
 
     for jc in (0..n).step_by(param.nc) {
         for pc in (0..k).step_by(param.kc) {
@@ -16,19 +14,18 @@ pub fn matmul(A: &Matrix, B: &Matrix, C: &mut Matrix, param: Param) {
             let Bc = B.pack_into(pc, ik, jc, min(jc + param.nc, n));
 
             for ic in (0..m).step_by(param.mc) {
-                // dprintln!("ic: {ic}, mc: {mc}, pc: {pc}, kc: {kc}");
                 let Ac = A.pack_into(ic, min(ic + param.mc, m), pc, ik);
                 //
                 // Macrokernel
                 //
-                for jr in (0..param.nc).step_by(Bc.width /* nr */) {
-                    for ir in (0..param.mc).step_by(Ac.height /* mr */) {
+                for ir in (0..param.mc).step_by(Ac.height /* mr */) {
+                    for jr in (0..param.nc).step_by(Bc.width /* nr */) {
                         //
                         // Microkernel
                         //
-                        for pr in 0..min(param.kc, Ac.width /* or Bc.row */) {
-                            for j in jr..Bc.width {
-                                for i in ir..Ac.height {
+                        for pr in 0..min(param.kc, Ac.width /* = Bc.height */) {
+                            for i in ir..Ac.height {
+                                for j in jr..Bc.width {
                                     *C.get_mut(i + ic, j + jc) += Ac.get(i, pr) * Bc.get(pr, j);
                                 }
                             }
@@ -42,40 +39,64 @@ pub fn matmul(A: &Matrix, B: &Matrix, C: &mut Matrix, param: Param) {
 
 // NOTE: optimized for BEST_PARAM
 pub fn simd_matmul(A: &Matrix, B: &Matrix, C: &mut Matrix, param: Param) {
-    let m = A.height /* or C.row */;
-    let k = A.width /* or B.row */;
-    let n = B.width /* or C.col */;
+    let m = A.height /* = C.height */;
+    let k = B.height /* = A.width */;
+    let n = C.width /* = B.width */;
+
+    let Bt = B.transpose(); // FIXME: assuming B is square
 
     for jc in (0..n).step_by(param.nc) {
         for pc in (0..k).step_by(param.kc) {
             let ik = min(pc + param.kc, k);
-            let Bc = B.pack_into(pc, ik, jc, min(jc + param.nc, n));
+            let Bc = Bt.pack_into(pc, ik, jc, min(jc + param.nc, n));
 
             for ic in (0..m).step_by(param.mc) {
                 let Ac = A.pack_into(ic, min(ic + param.mc, m), pc, ik);
                 //
                 // Macrokernel
                 //
-                for jr in (0..param.nc).step_by(Bc.width /* nr */) {
-                    for ir in (0..param.mc).step_by(Ac.height /* mr */) {
+                for ir in (0..param.mc).step_by(Ac.height /* mr */) {
+                    for jr in (0..param.nc).step_by(Bc.width /* nr */) {
                         //
                         // Microkernel
                         //
                         // Comment out because this is just a 1 loop
-                        for pr in /* 1 */ 0..min(param.kc, Ac.width /* or Bc.row */) {
-                            for j in /* 128 */ (jr..Bc.width).step_by(4) {
-                                for i in /* 1024 */ (ir..Ac.height).step_by(4) {
-                                    // #[cfg(target_arch = "aarch64")]
-                                    // unsafe {}
-                                    // #[cfg(target_arch = "aarch64")]
-                                    // use core::arch::aarch64::*;
-                                    // #[cfg(target_arch = "x86_64")]
-                                    // use std::arch::x86_64::*;
+                        // for pr in /* 1 */ 0..min(param.kc, Ac.width /* = Bc.height */) {
+                        for i in /* 1024 */ ir..Ac.height {
+                            for j in /* 128 */ jr..Bc.width {
+                                #[cfg(target_arch = "x86_64")]
+                                unsafe {
+                                    use std::arch::x86_64::*;
 
-                                    *C.get_mut(i + ic, j + jc) += Ac.get(i, pr) * Bc.get(pr, j);
+                                    let mut buffer = vec![0; 4];
+                                    let mut vc = _mm_loadu_si128(buffer.as_ptr() as *const _);
+
+                                    for pr in
+                                        (0..min(param.kc, Ac.width /* = Bc.height */)).step_by(4)
+                                    {
+                                        // load
+                                        let va = _mm_loadu_si128(Ac.get_ptr(i, pr) as *const _);
+                                        let vb = _mm_loadu_si128(Bc.get_ptr(j, pr) as *const _);
+
+                                        // multiply and add
+                                        vc = _mm_add_epi32(vc, _mm_mullo_epi32(va, vb));
+                                    }
+
+                                    // store
+                                    _mm_storeu_si128(buffer.as_mut_ptr() as *mut _, vc);
+                                    C.insert(
+                                        i + ic,
+                                        j + jc,
+                                        buffer[0] + buffer[1] + buffer[2] + buffer[3],
+                                    );
+                                }
+                                #[cfg(target_arch = "aarch64")]
+                                {
+                                    *C.get_mut(i + ic, j + jc) += Ac.get(i, 0) * Bc.get(0, j);
                                 }
                             }
                         }
+                        // }
                     }
                 }
             }
@@ -239,10 +260,10 @@ mod tests {
     //     let B = Matrix::seq_new(size, size);
     //
     //     let mut C = Matrix::zero_new(size, size);
-    //     simd_matmul(size, size, size, &A, &B, &mut C, BEST_PARAM);
+    //     fast::simd_matmul(&A, &B, &mut C, BEST_PARAM);
     //
     //     let mut C2 = Matrix::zero_new(size, size);
-    //     matmul(size, size, size, &A, &B, &mut C2, BEST_PARAM);
+    //     fast::matmul(&A, &B, &mut C2, BEST_PARAM);
     //
     //     assert_eq!(C, C2);
     // }

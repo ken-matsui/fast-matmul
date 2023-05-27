@@ -1,9 +1,9 @@
 use crate::Matrix;
 
 pub fn matmul(A: &Matrix, B: &Matrix, C: &mut Matrix) {
-    let m = A.height /* = C.row */; // n in arm neon // rows in A
-    let n = B.height /* = A.col */; // k in arm neon // cols in a and rows in b
-    let k = C.width /* = B.col */; // m in arm neon // cols in B
+    let m = A.height /* = C.height */;
+    let n = B.height /* = A.width */;
+    let k = C.width /* = B.width */;
 
     for i in 0..m {
         for j in 0..k {

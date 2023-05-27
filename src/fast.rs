@@ -1,16 +1,15 @@
 use std::cmp::min;
 
-#[cfg(target_arch = "aarch64")]
-use core::arch::aarch64::*;
-#[cfg(target_arch = "x86_64")]
-use std::arch::x86_64::*;
-
 // use debug_print::{debug_print as dprint, debug_println as dprintln};
 
 use crate::param::BEST_PARAM;
 use crate::{Matrix, Param};
 
-pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matrix, param: Param) {
+pub fn matmul(A: &Matrix, B: &Matrix, C: &mut Matrix, param: Param) {
+    let m = A.height /* or C.row */;
+    let k = A.width /* or B.row */;
+    let n = B.width /* or C.col */;
+
     for jc in (0..n).step_by(param.nc) {
         for pc in (0..k).step_by(param.kc) {
             let ik = min(pc + param.kc, k);
@@ -22,15 +21,15 @@ pub fn matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut Matr
                 //
                 // Macrokernel
                 //
-                for jr in (0..param.nc).step_by(Bc.col /* nr */) {
-                    for ir in (0..param.mc).step_by(Ac.row /* mr */) {
+                for jr in (0..param.nc).step_by(Bc.width /* nr */) {
+                    for ir in (0..param.mc).step_by(Ac.height /* mr */) {
                         //
                         // Microkernel
                         //
-                        for pr in 0..min(param.kc, Ac.col /* or Bc.row */) {
-                            for j in jr..Bc.col {
-                                for i in ir..Ac.row {
-                                    *C.get_ref_mut(i + ic, j + jc) += Ac.get(i, pr) * Bc.get(pr, j);
+                        for pr in 0..min(param.kc, Ac.width /* or Bc.row */) {
+                            for j in jr..Bc.width {
+                                for i in ir..Ac.height {
+                                    *C.get_mut(i + ic, j + jc) += Ac.get(i, pr) * Bc.get(pr, j);
                                 }
                             }
                         }
@@ -47,23 +46,38 @@ pub fn best_matmul(m: usize, k: usize, n: usize, A: &Matrix, B: &Matrix, C: &mut
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::naive;
+    use crate::param::BEST_PARAM;
+    use crate::test_util::expected_8x8;
+    use crate::{fast, naive, Matrix, Param};
     use itertools::iproduct;
+
+    #[test]
+    fn test_matmul_1() {
+        let m: usize = 8;
+        let k: usize = 8;
+        let n: usize = 8;
+
+        let A = Matrix::seq_new(m, k);
+        let B = Matrix::seq_new(k, n);
+        let mut C = Matrix::zero_new(m, n);
+
+        fast::matmul(&A, &B, &mut C, Param::new(1, 1, 1));
+        assert_eq!(C, expected_8x8());
+    }
 
     fn matmul_helper(size: usize, param: Param) {
         let m: usize = size;
         let k: usize = size;
         let n: usize = size;
 
-        let A = Matrix::seq_new(m, k);
-        let B = Matrix::seq_new(k, n);
+        let A = Matrix::rand_new(m, k);
+        let B = Matrix::rand_new(k, n);
 
         let mut C = Matrix::zero_new(m, n);
-        matmul(m, k, n, &A, &B, &mut C, param);
+        fast::matmul(&A, &B, &mut C, param);
 
         let mut C2 = Matrix::zero_new(m, n);
-        naive::matmul(m, k, n, &A, &B, &mut C2);
+        naive::matmul(&A, &B, &mut C2);
 
         assert_eq!(C, C2);
     }
@@ -78,7 +92,35 @@ mod tests {
     }
 
     #[test]
-    fn test_matmul() {
+    fn test_naive_matmul_1() {
+        let size = 4;
+
+        let A = Matrix::rand_new(size, size);
+        let B = Matrix::rand_new(size, size);
+        let mut C = Matrix::zero_new(size, size);
+        naive::matmul(&A, &B, &mut C);
+
+        let mut C2 = Matrix::zero_new(size, size);
+        fast::matmul(&A, &B, &mut C2, Param::new(1, 1, 1));
+    }
+
+    #[test]
+    fn test_naive_matmul_2() {
+        let naive_param = Param::new(1, 1, 1);
+
+        let mut i: usize = 2;
+        loop {
+            matmul_helper(i, naive_param);
+            i = i.pow(2);
+
+            if i > 128 {
+                break;
+            }
+        }
+    }
+
+    #[test]
+    fn test_matmul_2() {
         let mut i: usize = 2;
         loop {
             matmul_helper(i, Param::default());

@@ -14,13 +14,29 @@ pub fn matmul(A: &Matrix, B: &Matrix, C: &mut Matrix) {
     }
 }
 
+pub fn matmul_with_transpose(A: &Matrix, B: &Matrix, C: &mut Matrix) {
+    let Bt = B.transpose(); // FIXME: assuming B is square
+
+    let m = A.height /* = C.height */;
+    let n = B.height /* = A.width */;
+    let k = C.width /* = B.width */;
+
+    for i in 0..m {
+        for j in 0..k {
+            for p in 0..n {
+                *C.get_mut(i, j) += A.get(i, p) * Bt.get(j, p);
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::test_util::expected_8x8;
     use crate::{matrix, naive, Matrix};
 
     #[test]
-    fn test_matmul() {
+    fn test_matmul_1() {
         let m: usize = 8;
         let n: usize = 8;
         let k: usize = 8;
@@ -75,5 +91,20 @@ mod tests {
         expected.insert(1, 1, 653);
 
         assert_eq!(C, expected);
+    }
+
+    #[test]
+    fn test_matmul_with_transpose() {
+        let m: usize = 8;
+        let n: usize = 8;
+        let k: usize = 8;
+
+        // A(m * n) * B(n * k) => C(m * k)
+        let A = Matrix::seq_new(m, n);
+        let B = Matrix::seq_new(n, k);
+        let mut C = Matrix::zero_new(m, k);
+
+        naive::matmul_with_transpose(&A, &B, &mut C);
+        assert_eq!(C, expected_8x8());
     }
 }

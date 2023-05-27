@@ -14,7 +14,7 @@ pub fn matmul(A: &Matrix, B: &Matrix, C: &mut Matrix) {
     }
 }
 
-pub fn matmul_with_transpose(A: &Matrix, B: &Matrix, C: &mut Matrix) {
+pub fn matmul_with_trans(A: &Matrix, B: &Matrix, C: &mut Matrix) {
     let Bt = B.transpose(); // FIXME: assuming B is square
 
     let m = A.height /* = C.height */;
@@ -104,7 +104,7 @@ mod tests {
         let B = Matrix::seq_new(n, k);
         let mut C = Matrix::zero_new(m, k);
 
-        naive::matmul_with_transpose(&A, &B, &mut C);
+        naive::matmul_with_trans(&A, &B, &mut C);
         assert_eq!(C, expected_8x8());
     }
 }

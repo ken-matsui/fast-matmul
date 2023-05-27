@@ -10,42 +10,60 @@ static GLOBAL: MiMalloc = MiMalloc;
 /// Value type for Matrix
 type Value = u32;
 
+/// width: number of cols
+/// height: number of rows
+///
+///         # of cols
+///         ↓ ↓ ↓ ↓ ↓
+/// \#   -> □ □ □ □ □
+/// of   -> □ □ □ □ □
+/// rows -> □ □ □ □ □
+///
 #[derive(Debug, PartialEq)]
 pub struct Matrix {
-    pub(crate) row: usize,
-    pub(crate) col: usize,
+    pub(crate) width: usize,
+    pub(crate) height: usize,
 
     pub(crate) inner: Vec<Value>,
+}
+
+/// To avoid immutable borrow
+macro_rules! idx {
+    ($self: ident, $row: expr, $col: expr) => {
+        $self.width * $row + $col
+    };
 }
 
 impl Matrix {
     /// Initialize with 0
     #[inline(always)]
-    pub fn zero_new(row: usize, col: usize) -> Self {
+    pub fn zero_new(width: usize, height: usize) -> Self {
         Matrix {
-            row,
-            col,
+            width,
+            height,
+
             // fill with 0
-            inner: vec![Value::default(); row * col],
+            inner: vec![Value::default(); width * height],
         }
     }
     /// Initialize with 1
     #[inline(always)]
-    pub fn one_new(row: usize, col: usize) -> Self {
+    pub fn one_new(width: usize, height: usize) -> Self {
         Matrix {
-            row,
-            col,
-            inner: vec![1; row * col],
+            width,
+            height,
+
+            inner: vec![1; width * height],
         }
     }
     /// Initialize with sequential numbers
-    pub fn seq_new(row: usize, col: usize) -> Self {
-        let mut matrix = Self::zero_new(row, col);
+    pub fn seq_new(width: usize, height: usize) -> Self {
+        let mut matrix = Self::zero_new(width, height);
 
         let mut num: Value = 0;
-        for j in 0..col {
-            for i in 0..row {
-                matrix.insert(i, j, num);
+        for row in 0..height {
+            for col in 0..width {
+                matrix.insert(row, col, num);
                 num += 1;
             }
         }
@@ -54,21 +72,33 @@ impl Matrix {
     }
     /// Initialize with random numbers
     #[inline(always)]
-    pub fn rand_new(row: usize, col: usize) -> Self {
+    pub fn rand_new(width: usize, height: usize) -> Self {
         Matrix {
-            row,
-            col,
-            inner: fake::vec![Value; row * col],
+            width,
+            height,
+
+            inner: fake::vec![Value; width * height],
         }
     }
 
+    /// row: position at rows
+    /// col: position at cols
+    ///
+    /// e.g. row = 1, col = 2
+    ///
+    ///            col
+    ///             ↓    
+    ///         □ □ □ □ □
+    ///  row -> □ □ ■ □ □
+    ///         □ □ □ □ □
+    ///
     #[inline(always)]
-    pub fn get(&self, i: usize, j: usize) -> &Value {
-        unsafe { self.inner.get_unchecked(j * self.row + i) }
+    pub fn get(&self, row: usize, col: usize) -> &Value {
+        unsafe { self.inner.get_unchecked(idx!(self, row, col)) }
     }
     #[inline(always)]
-    pub fn get_mut(&mut self, i: usize, j: usize) -> &mut Value {
-        unsafe { &mut *self.inner.get_unchecked_mut(j * self.row + i) }
+    pub fn get_mut(&mut self, row: usize, col: usize) -> &mut Value {
+        unsafe { &mut *self.inner.get_unchecked_mut(idx!(self, row, col)) }
     }
 
     #[inline(always)]
@@ -81,41 +111,55 @@ impl Matrix {
     }
 
     #[inline(always)]
-    pub fn get_ptr(&self, i: usize, j: usize) -> *const Value {
-        unsafe { self.as_ptr().add(j * self.row + i) }
+    pub fn get_ptr(&self, row: usize, col: usize) -> *const Value {
+        unsafe { self.as_ptr().add(idx!(self, row, col)) }
     }
     #[inline(always)]
-    pub fn get_mut_ptr(&mut self, i: usize, j: usize) -> *mut Value {
-        unsafe { self.as_mut_ptr().add(j * self.row + i) }
+    pub fn get_mut_ptr(&mut self, row: usize, col: usize) -> *mut Value {
+        unsafe { self.as_mut_ptr().add(idx!(self, row, col)) }
     }
 
     #[inline(always)]
-    pub fn insert(&mut self, i: usize, j: usize, val: Value) {
-        *self.get_mut(i, j) = val;
+    pub fn insert(&mut self, row: usize, col: usize, val: Value) {
+        *self.get_mut(row, col) = val;
     }
 
     /// Returns a copied matrix must be smaller than the original
     /// The range ends must be exclusive
     ///
     /// For better performance, this method does not check if arguments are out of bounds.
-    pub fn pack_into(&self, i_from: usize, i_to: usize, j_from: usize, j_to: usize) -> Matrix {
-        self.pack_row_mjr(i_from, i_to, j_from, j_to)
+    pub fn pack_into(&self, row_fr: usize, row_to: usize, col_fr: usize, col_to: usize) -> Matrix {
+        self.pack_into_row_major(row_fr, row_to, col_fr, col_to)
     }
 
-    pub fn pack_row_mjr(&self, i_from: usize, i_to: usize, j_from: usize, j_to: usize) -> Matrix {
-        let mut copy = Matrix::zero_new(i_to - i_from, j_to - j_from);
-        for j in j_from..j_to {
-            for i in i_from..i_to {
-                copy.insert(i - i_from, j - j_from, *self.get(i, j));
+    /// Pack into row major order
+    pub fn pack_into_row_major(
+        &self,
+        row_fr: usize,
+        row_to: usize,
+        col_fr: usize,
+        col_to: usize,
+    ) -> Matrix {
+        let mut copy = Matrix::zero_new(col_to - col_fr, row_to - row_fr);
+        for row in row_fr..row_to {
+            for col in col_fr..col_to {
+                copy.insert(row - row_fr, col - col_fr, *self.get(row, col));
             }
         }
         copy
     }
-    pub fn pack_col_mjr(&self, i_from: usize, i_to: usize, j_from: usize, j_to: usize) -> Matrix {
-        let mut copy = Matrix::zero_new(i_to - i_from, j_to - j_from);
-        for j in j_from..j_to {
-            for i in i_from..i_to {
-                copy.insert(i - i_from, j - j_from, *self.get(j, i));
+    /// Pack into column major order
+    pub fn pack_into_col_major(
+        &self,
+        row_fr: usize,
+        row_to: usize,
+        col_fr: usize,
+        col_to: usize,
+    ) -> Matrix {
+        let mut copy = Matrix::zero_new(row_to - row_fr, col_to - col_fr);
+        for col in col_fr..col_to {
+            for row in row_fr..row_to {
+                copy.insert(row - row_fr, col - col_fr, *self.get(col, row));
             }
         }
         copy
@@ -148,13 +192,13 @@ impl_arr_init!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,);
 
 impl<V: FixedArray> From<Vec<V>> for Matrix {
     fn from(value: Vec<V>) -> Self {
-        let row = V::len();
-        let col = value.len();
+        let width = V::len();
+        let height = value.len();
 
-        let mut matrix = Matrix::zero_new(row, col);
-        for j in 0..col {
-            for i in 0..row {
-                matrix.insert(i, j, value[j][i]);
+        let mut matrix = Matrix::zero_new(width, height);
+        for row in 0..height {
+            for col in 0..width {
+                matrix.insert(row, col, value[row][col]);
             }
         }
         matrix
@@ -163,9 +207,9 @@ impl<V: FixedArray> From<Vec<V>> for Matrix {
 
 impl Display for Matrix {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        for j in 0..self.col {
-            for i in 0..self.row {
-                write!(f, "{} ", self.get(i, j))?;
+        for row in 0..self.height {
+            for col in 0..self.width {
+                write!(f, "{} ", self.get(row, col))?;
             }
             writeln!(f)?;
         }
@@ -178,40 +222,115 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_zero_new() {
+        let matrix = Matrix::zero_new(2, 4);
+        assert_eq!(matrix.width, 2);
+        assert_eq!(matrix.height, 4);
+        assert_eq!(matrix.inner.len(), 8);
+        assert_eq!(matrix.inner, vec![0; 8]);
+    }
+
+    #[test]
+    fn test_one_new() {
+        let matrix = Matrix::one_new(4, 2);
+        assert_eq!(matrix.width, 4);
+        assert_eq!(matrix.height, 2);
+        assert_eq!(matrix.inner.len(), 8);
+        assert_eq!(matrix.inner, vec![1; 8]);
+    }
+
+    #[test]
+    fn test_seq_new() {
+        let matrix = Matrix::seq_new(4, 4);
+        assert_eq!(matrix.width, 4);
+        assert_eq!(matrix.height, 4);
+        assert_eq!(matrix.inner.len(), 16);
+        assert_eq!(
+            matrix.inner,
+            vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        );
+    }
+
+    #[test]
+    fn test_rand_new() {
+        let matrix = Matrix::rand_new(3, 9);
+        assert_eq!(matrix.width, 3);
+        assert_eq!(matrix.height, 9);
+        assert_eq!(matrix.inner.len(), 27);
+    }
+
+    #[test]
+    fn test_get() {
+        let matrix = Matrix::seq_new(4, 4);
+        assert_eq!(matrix.get(0, 0), &0);
+        assert_eq!(matrix.get(0, 1), &1);
+        assert_eq!(matrix.get(0, 2), &2);
+        assert_eq!(matrix.get(0, 3), &3);
+        assert_eq!(matrix.get(1, 0), &4);
+        assert_eq!(matrix.get(1, 1), &5);
+        assert_eq!(matrix.get(1, 2), &6);
+        assert_eq!(matrix.get(1, 3), &7);
+        assert_eq!(matrix.get(2, 0), &8);
+        assert_eq!(matrix.get(2, 1), &9);
+        assert_eq!(matrix.get(2, 2), &10);
+        assert_eq!(matrix.get(2, 3), &11);
+        assert_eq!(matrix.get(3, 0), &12);
+        assert_eq!(matrix.get(3, 1), &13);
+        assert_eq!(matrix.get(3, 2), &14);
+        assert_eq!(matrix.get(3, 3), &15);
+    }
+
+    #[test]
+    fn test_get_mut() {
+        let mut matrix = Matrix::seq_new(4, 4);
+        assert_eq!(matrix.get(0, 0), &0);
+        *matrix.get_mut(0, 0) = 1;
+        assert_eq!(matrix.get(0, 0), &1);
+    }
+
+    #[test]
+    fn test_insert() {
+        let mut matrix = Matrix::seq_new(4, 4);
+        assert_eq!(matrix.get(0, 0), &0);
+        matrix.insert(0, 0, 1);
+        assert_eq!(matrix.get(0, 0), &1);
+    }
+
+    #[test]
     fn test_pack_row_mjr_just_copy() {
         let matrix = Matrix::seq_new(4, 4);
-        let copy = matrix.pack_row_mjr(0, 4, 0, 4);
+        let copy = matrix.pack_into_row_major(0, 4, 0, 4);
         assert_eq!(copy, matrix);
     }
 
     #[test]
     fn test_pack_row_mjr_empty() {
         let matrix = Matrix::seq_new(4, 4);
-        let copy = matrix.pack_row_mjr(0, 0, 0, 0);
+        let copy = matrix.pack_into_row_major(0, 0, 0, 0);
         assert_eq!(copy, Matrix::zero_new(0, 0));
     }
 
     #[test]
     fn test_pack_row_mjr_1() {
         let matrix = Matrix::seq_new(4, 4);
-        let copy = matrix.pack_row_mjr(0, 4, 0, 1);
+        let copy = matrix.pack_into_row_major(0, 1, 0, 4);
         assert_eq!(copy.inner, Matrix::seq_new(2, 2).inner);
     }
     #[test]
     fn test_pack_row_mjr_2() {
         let matrix = Matrix::seq_new(4, 4);
-        let copy = matrix.pack_row_mjr(0, 4, 0, 2);
+        let copy = matrix.pack_into_row_major(0, 2, 0, 4);
         assert_eq!(copy.inner, Matrix::seq_new(4, 2).inner);
     }
     #[test]
     fn test_pack_row_mjr_3() {
         let matrix = Matrix::seq_new(4, 4);
-        let copy = matrix.pack_row_mjr(0, 4, 2, 4);
+        let copy = matrix.pack_into_row_major(2, 4, 0, 4);
 
-        let start = 2 * 4 + 0; // j * row + i
-        for i in 0..4 {
-            for j in 0..2 {
-                assert_eq!(*copy.get(i, j), (start + i + j * 4) as u32);
+        let start = 4 * 2 + 0; // width (# of cols) * row + col
+        for row in 0..2 {
+            for col in 0..4 {
+                assert_eq!(*copy.get(row, col), (start + col + row * 4) as u32);
             }
         }
     }
@@ -219,7 +338,73 @@ mod tests {
     #[test]
     fn test_pack_col_mjr_just_copy() {
         let matrix = Matrix::seq_new(4, 4);
-        let copy = matrix.pack_col_mjr(0, 4, 0, 4);
+        let copy = matrix.pack_into_col_major(0, 4, 0, 4);
         assert_eq!(copy, matrix.transpose(), "copy should be transposed");
+    }
+
+    #[test]
+    fn test_from_1() {
+        let matrix = Matrix::from(vec![[1, 2, 3], [4, 5, 6]]);
+        assert_eq!(matrix.width, 3);
+        assert_eq!(matrix.height, 2);
+        assert_eq!(matrix.inner.len(), 6);
+        assert_eq!(matrix.inner, vec![1, 2, 3, 4, 5, 6]);
+    }
+    #[test]
+    fn test_from_2() {
+        let matrix = Matrix::from(vec![[1, 2, 3], [4, 5, 6], [7, 8, 9]]);
+        assert_eq!(matrix.width, 3);
+        assert_eq!(matrix.height, 3);
+        assert_eq!(matrix.inner.len(), 9);
+        assert_eq!(matrix.inner, vec![1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    }
+    #[test]
+    fn test_from_3() {
+        let matrix = Matrix::from(vec![[1, 2], [3, 4], [5, 6]]);
+        assert_eq!(matrix.width, 2);
+        assert_eq!(matrix.height, 3);
+        assert_eq!(matrix.inner.len(), 6);
+        assert_eq!(matrix.inner, vec![1, 2, 3, 4, 5, 6]);
+    }
+
+    #[test]
+    fn test_matrix_macro_1() {
+        let matrix = matrix![[1, 2, 3], [4, 5, 6]];
+        assert_eq!(matrix.width, 3);
+        assert_eq!(matrix.height, 2);
+        assert_eq!(matrix.inner.len(), 6);
+        assert_eq!(matrix.inner, vec![1, 2, 3, 4, 5, 6]);
+    }
+    #[test]
+    fn test_matrix_macro_2() {
+        let matrix = matrix![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+        assert_eq!(matrix.width, 3);
+        assert_eq!(matrix.height, 3);
+        assert_eq!(matrix.inner.len(), 9);
+        assert_eq!(matrix.inner, vec![1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    }
+    #[test]
+    fn test_matrix_macro_3() {
+        let matrix = matrix![[1, 2], [3, 4], [5, 6]];
+        assert_eq!(matrix.width, 2);
+        assert_eq!(matrix.height, 3);
+        assert_eq!(matrix.inner.len(), 6);
+        assert_eq!(matrix.inner, vec![1, 2, 3, 4, 5, 6]);
+    }
+
+    #[test]
+    fn test_display_1() {
+        let matrix = matrix![[1, 2, 3], [4, 5, 6]];
+        assert_eq!(format!("{}", matrix), "1 2 3 \n4 5 6 \n");
+    }
+    #[test]
+    fn test_display_2() {
+        let matrix = matrix![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+        assert_eq!(format!("{}", matrix), "1 2 3 \n4 5 6 \n7 8 9 \n");
+    }
+    #[test]
+    fn test_display_3() {
+        let matrix = matrix![[1, 2], [3, 4], [5, 6]];
+        assert_eq!(format!("{}", matrix), "1 2 \n3 4 \n5 6 \n");
     }
 }

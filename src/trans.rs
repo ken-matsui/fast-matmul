@@ -2,19 +2,17 @@
 use crate::Matrix;
 
 pub(crate) fn naive(In: &Matrix, Out: &mut Matrix) {
-    let m = In.row;
-    let n = In.col;
-
-    for i in 0..m {
-        for j in 0..n {
-            *Out.get_ref_mut(j, i) = *In.get(i, j);
+    for row in 0..In.height {
+        for col in 0..In.width {
+            *Out.get_mut(col, row) = *In.get(row, col);
         }
     }
 }
 
 impl Matrix {
     pub(crate) fn transpose(&self) -> Matrix {
-        let mut tmp = Matrix::zero_new(self.col, self.row);
+        // width and height should be swapped
+        let mut tmp = Matrix::zero_new(self.height, self.width);
         naive(self, &mut tmp);
         tmp
     }
@@ -24,10 +22,10 @@ impl Matrix {
 mod tests {
     use super::*;
 
-    fn is_transpose(m: usize, n: usize, A: &Matrix, B: &Matrix) -> bool {
-        for i in 0..m {
-            for j in 0..n {
-                if A.get(i, j) != B.get(j, i) {
+    fn is_transpose(A: &Matrix, B: &Matrix) -> bool {
+        for row in 0..A.height {
+            for col in 0..A.width {
+                if A.get(row, col) != B.get(col, row) {
                     return false;
                 }
             }
@@ -41,14 +39,14 @@ mod tests {
 
         let mut A = Matrix::zero_new(size, size);
         A.insert(0, 0, 21);
-        A.insert(1, 0, 53);
-        A.insert(0, 1, 7);
+        A.insert(0, 1, 53);
+        A.insert(1, 0, 7);
         A.insert(1, 1, 3);
 
         let mut expected = Matrix::zero_new(size, size);
         expected.insert(0, 0, 21);
-        expected.insert(1, 0, 7);
-        expected.insert(0, 1, 53);
+        expected.insert(0, 1, 7);
+        expected.insert(1, 0, 53);
         expected.insert(1, 1, 3);
 
         let At = A.transpose();
@@ -62,7 +60,7 @@ mod tests {
             let A = Matrix::rand_new(size, size);
             let At = A.transpose();
 
-            assert!(is_transpose(size, size, &A, &At));
+            assert!(is_transpose(&A, &At));
             size = size.pow(2);
 
             if size > 2048 {
@@ -73,12 +71,12 @@ mod tests {
 
     #[test]
     fn test_trans_impl_imbalanced() {
-        let m = 2;
-        let n = 4;
+        let width = 2;
+        let height = 4;
 
-        let A = Matrix::rand_new(m, n);
+        let A = Matrix::rand_new(width, height);
         let At = A.transpose();
-        assert!(is_transpose(m, n, &A, &At));
+        assert!(is_transpose(&A, &At));
     }
 
     #[test]
@@ -89,7 +87,7 @@ mod tests {
             let mut At = Matrix::rand_new(size, size);
 
             naive(&A, &mut At);
-            assert!(is_transpose(size, size, &A, &At));
+            assert!(is_transpose(&A, &At));
             size = size.pow(2);
 
             if size > 2048 {
@@ -100,15 +98,13 @@ mod tests {
 
     #[test]
     fn test_naive_imbalanced() {
-        let m = 2;
-        let n = 4;
+        let width = 2;
+        let height = 4;
 
-        let A = Matrix::rand_new(m, n);
-        let mut At = Matrix::rand_new(n, m);
-        println!("{}", A);
-        println!("{}", At);
+        let A = Matrix::rand_new(width, height);
+        let mut At = Matrix::rand_new(height, width);
 
         naive(&A, &mut At);
-        assert!(is_transpose(m, n, &A, &At));
+        assert!(is_transpose(&A, &At));
     }
 }

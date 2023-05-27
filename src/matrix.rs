@@ -1,5 +1,5 @@
 use std::cmp::min;
-use std::fmt::{self, Display, Formatter};
+use std::fmt::{self, Debug, Display, Formatter};
 use std::ops::Index;
 
 use mimalloc::MiMalloc;
@@ -21,7 +21,7 @@ type Value = u32;
 /// of   -> □ □ □ □ □
 /// rows -> □ □ □ □ □
 /// ```
-#[derive(Debug, PartialEq)]
+#[derive(PartialEq)]
 pub struct Matrix {
     pub(crate) width: usize,
     pub(crate) height: usize,
@@ -222,10 +222,16 @@ impl<V: FixedArray> From<Vec<V>> for Matrix {
     }
 }
 
+impl Debug for Matrix {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 impl Display for Matrix {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        writeln!(f, "[")?;
-        for row in 0..min(self.height, 10) {
+        writeln!(f, "({}x{})[", self.width, self.height)?;
+        for row in 0..min(self.height, 5) {
             write!(f, "  [")?;
             for col in 0..min(self.width, 10) {
                 write!(f, "{}", self.get(row, col))?;
@@ -236,7 +242,7 @@ impl Display for Matrix {
                 }
             }
             writeln!(f, "],")?;
-            if row == 9 && self.height > 10 {
+            if row == 4 && self.height > 5 {
                 writeln!(f, "  ...,")?;
             }
         }
@@ -435,7 +441,7 @@ mod tests {
         let matrix = matrix![[1, 2, 3], [4, 5, 6]];
         assert_eq!(
             format!("{matrix}"),
-            r#"[
+            r#"(3x2)[
   [1, 2, 3],
   [4, 5, 6],
 ]"#
@@ -446,7 +452,7 @@ mod tests {
         let matrix = matrix![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
         assert_eq!(
             format!("{matrix}"),
-            r#"[
+            r#"(3x3)[
   [1, 2, 3],
   [4, 5, 6],
   [7, 8, 9],
@@ -458,7 +464,7 @@ mod tests {
         let matrix = matrix![[1, 2], [3, 4], [5, 6]];
         assert_eq!(
             format!("{matrix}"),
-            r#"[
+            r#"(2x3)[
   [1, 2],
   [3, 4],
   [5, 6],
@@ -467,20 +473,15 @@ mod tests {
     }
     #[test]
     fn test_display_large() {
-        let matrix = Matrix::seq_new(11, 11);
+        let matrix = Matrix::seq_new(11, 6);
         assert_eq!(
             format!("{matrix}"),
-            r#"[
+            r#"(11x6)[
   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ...],
   [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, ...],
   [22, 23, 24, 25, 26, 27, 28, 29, 30, 31, ...],
   [33, 34, 35, 36, 37, 38, 39, 40, 41, 42, ...],
   [44, 45, 46, 47, 48, 49, 50, 51, 52, 53, ...],
-  [55, 56, 57, 58, 59, 60, 61, 62, 63, 64, ...],
-  [66, 67, 68, 69, 70, 71, 72, 73, 74, 75, ...],
-  [77, 78, 79, 80, 81, 82, 83, 84, 85, 86, ...],
-  [88, 89, 90, 91, 92, 93, 94, 95, 96, 97, ...],
-  [99, 100, 101, 102, 103, 104, 105, 106, 107, 108, ...],
   ...,
 ]"#
         );

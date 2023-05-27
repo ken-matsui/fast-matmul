@@ -1,14 +1,14 @@
 use crate::Matrix;
 
 pub fn matmul(A: &Matrix, B: &Matrix, C: &mut Matrix) {
-    let m = A.row /* or C.row */;
-    let k = A.col /* or B.row */;
-    let n = B.col /* or C.col */;
+    let m = A.height /* = C.row */; // n in arm neon // rows in A
+    let n = B.height /* = A.col */; // k in arm neon // cols in a and rows in b
+    let k = C.width /* = B.col */; // m in arm neon // cols in B
 
     for i in 0..m {
-        for j in 0..n {
-            for p in 0..k {
-                *C.get_ref_mut(j, i) += A.get(p, i) * B.get(j, p);
+        for j in 0..k {
+            for p in 0..n {
+                *C.get_mut(i, j) += A.get(i, p) * B.get(p, j);
             }
         }
     }
@@ -16,48 +16,64 @@ pub fn matmul(A: &Matrix, B: &Matrix, C: &mut Matrix) {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use crate::test_util::expected_8x8;
+    use crate::{matrix, naive, Matrix};
 
     #[test]
     fn test_matmul() {
         let m: usize = 8;
-        let k: usize = 8;
         let n: usize = 8;
+        let k: usize = 8;
 
-        let A = Matrix::seq_new(m, k);
-        let B = Matrix::seq_new(k, n);
-        let mut C = Matrix::zero_new(m, n);
+        // A(m * n) * B(n * k) => C(m * k)
+        let A = Matrix::seq_new(m, n);
+        let B = Matrix::seq_new(n, k);
+        let mut C = Matrix::zero_new(m, k);
 
-        matmul(&A, &B, &mut C);
+        naive::matmul(&A, &B, &mut C);
         assert_eq!(C, expected_8x8());
     }
 
     #[test]
     fn test_matmul_2() {
+        let m = 2;
+        // let n = 3;
+        let k = 2;
+
+        let A = matrix![[1, 2, 3], [4, 5, 6]];
+        let B = matrix![[7, 8], [9, 10], [11, 12]];
+        let mut C = Matrix::zero_new(m, k);
+        naive::matmul(&A, &B, &mut C);
+
+        let expected = matrix![[58, 64], [139, 154]];
+        assert_eq!(C, expected);
+    }
+
+    #[test]
+    fn test_matmul_3() {
         let size = 2;
 
         let mut A = Matrix::zero_new(size, size);
         A.insert(0, 0, 21);
-        A.insert(1, 0, 53);
-        A.insert(0, 1, 7);
+        A.insert(0, 1, 53);
+        A.insert(1, 0, 7);
         A.insert(1, 1, 3);
 
         let mut B = Matrix::zero_new(size, size);
         B.insert(0, 0, 543);
-        B.insert(1, 0, 56);
-        B.insert(0, 1, 25);
+        B.insert(0, 1, 56);
+        B.insert(1, 0, 25);
         B.insert(1, 1, 87);
 
         let mut C = Matrix::zero_new(size, size);
-        matmul(&A, &B, &mut C);
+        naive::matmul(&A, &B, &mut C);
 
-        let mut C2 = Matrix::zero_new(size, size);
-        C2.insert(0, 0, 12728);
-        C2.insert(1, 0, 5787);
-        C2.insert(0, 1, 3876);
-        C2.insert(1, 1, 653);
+        let mut expected = Matrix::zero_new(size, size);
+        expected.insert(0, 0, 12728);
+        expected.insert(0, 1, 5787);
+        expected.insert(1, 0, 3876);
+        expected.insert(1, 1, 653);
 
-        assert_eq!(C, C2);
+        assert_eq!(C, expected);
     }
 }

@@ -221,13 +221,18 @@ impl<V: FixedArray> From<Vec<V>> for Matrix {
 
 impl Display for Matrix {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        writeln!(f, "[")?;
         for row in 0..self.height {
+            write!(f, "  [")?;
             for col in 0..self.width {
-                write!(f, "{} ", self.get(row, col))?;
+                write!(f, "{}", self.get(row, col))?;
+                if col != self.width - 1 {
+                    write!(f, ", ")?;
+                }
             }
-            writeln!(f)?;
+            writeln!(f, "],")?;
         }
-        Ok(())
+        write!(f, "]")
     }
 }
 
@@ -420,16 +425,22 @@ mod tests {
     #[test]
     fn test_display_1() {
         let matrix = matrix![[1, 2, 3], [4, 5, 6]];
-        assert_eq!(format!("{}", matrix), "1 2 3 \n4 5 6 \n");
+        assert_eq!(format!("{}", matrix), "[\n  [1, 2, 3],\n  [4, 5, 6],\n]");
     }
     #[test]
     fn test_display_2() {
         let matrix = matrix![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-        assert_eq!(format!("{}", matrix), "1 2 3 \n4 5 6 \n7 8 9 \n");
+        assert_eq!(
+            format!("{}", matrix),
+            "[\n  [1, 2, 3],\n  [4, 5, 6],\n  [7, 8, 9],\n]"
+        );
     }
     #[test]
     fn test_display_3() {
         let matrix = matrix![[1, 2], [3, 4], [5, 6]];
-        assert_eq!(format!("{}", matrix), "1 2 \n3 4 \n5 6 \n");
+        assert_eq!(
+            format!("{}", matrix),
+            "[\n  [1, 2],\n  [3, 4],\n  [5, 6],\n]"
+        );
     }
 }

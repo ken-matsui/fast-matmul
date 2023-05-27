@@ -4,6 +4,16 @@
 cargo test
 ```
 
+or
+
+```shell
+cargo install cargo-nextest --locked
+```
+
+```shell
+cargo nextest run
+```
+
 ## Benchmark
 
 ```shell

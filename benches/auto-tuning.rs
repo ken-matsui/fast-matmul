@@ -10,7 +10,7 @@ fn fast_matmul(size: usize, param: Param) {
     let A = Matrix::seq_new(size, size);
     let B = Matrix::seq_new(size, size);
     let mut C = Matrix::zero_new(size, size);
-    fast::matmul(size, size, size, &A, &B, &mut C, param);
+    fast::matmul(&A, &B, &mut C, param);
 }
 
 fn bench(c: &mut Criterion) {

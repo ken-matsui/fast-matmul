@@ -33,6 +33,8 @@ impl<V: FixedArray> From<Vec<V>> for Matrix {
         let height = value.len();
 
         let mut matrix = Matrix::zero_new(width, height);
+
+        #[allow(clippy::needless_range_loop)]
         for row in 0..height {
             for col in 0..width {
                 matrix.set(row, col, value[row][col]);

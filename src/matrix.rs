@@ -194,7 +194,7 @@ mod tests {
         assert_eq!(matrix.height, 3);
         assert_eq!(matrix.inner.len(), 27);
         for elem in matrix.inner {
-            assert!(elem >= 1 && elem <= 10);
+            assert!((1..=10).contains(&elem));
         }
     }
 

@@ -5,9 +5,12 @@ use std::ops::Index;
 
 #[macro_export]
 macro_rules! matrix {
-    ($([$($x:expr),* $(,)*]),+ $(,)*) => {{
+    () => {
+        $crate::Matrix::zero_new(0, 0)
+    };
+    ($([$($x:expr),* $(,)*]),+ $(,)*) => {
         $crate::Matrix::from(vec![$([$($x,)*],)*])
-    }};
+    };
 }
 
 trait FixedArray: Index<usize, Output = Value> {
@@ -71,6 +74,23 @@ mod tests {
         assert_eq!(matrix.height, 3);
         assert_eq!(matrix.inner.len(), 6);
         assert_eq!(matrix.inner, vec![1, 2, 3, 4, 5, 6]);
+    }
+
+    #[test]
+    fn test_matrix_macro_empty() {
+        let matrix = matrix![];
+        assert_eq!(matrix.width, 0);
+        assert_eq!(matrix.height, 0);
+        assert_eq!(matrix.inner.len(), 0);
+        assert_eq!(matrix.inner, vec![]);
+    }
+    #[test]
+    fn test_matrix_macro_empty_vec() {
+        let matrix = matrix![[]];
+        assert_eq!(matrix.width, 0);
+        assert_eq!(matrix.height, 1);
+        assert_eq!(matrix.inner.len(), 0);
+        assert_eq!(matrix.inner, vec![]);
     }
 
     #[test]

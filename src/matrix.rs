@@ -65,7 +65,7 @@ impl Matrix {
         let mut num: Value = 0;
         for row in 0..height {
             for col in 0..width {
-                matrix.insert(row, col, num);
+                matrix.set(row, col, num);
                 num += 1;
             }
         }
@@ -137,7 +137,7 @@ impl Matrix {
     }
 
     #[inline(always)]
-    pub fn insert(&mut self, row: usize, col: usize, val: Value) {
+    pub fn set(&mut self, row: usize, col: usize, val: Value) {
         *self.get_mut(row, col) = val;
     }
 
@@ -160,7 +160,7 @@ impl Matrix {
         let mut copy = Matrix::zero_new(col_to - col_fr, row_to - row_fr);
         for row in row_fr..row_to {
             for col in col_fr..col_to {
-                copy.insert(row - row_fr, col - col_fr, *self.get(row, col));
+                copy.set(row - row_fr, col - col_fr, *self.get(row, col));
             }
         }
         copy
@@ -176,7 +176,7 @@ impl Matrix {
         let mut copy = Matrix::zero_new(row_to - row_fr, col_to - col_fr);
         for col in col_fr..col_to {
             for row in row_fr..row_to {
-                copy.insert(row - row_fr, col - col_fr, *self.get(col, row));
+                copy.set(row - row_fr, col - col_fr, *self.get(col, row));
             }
         }
         copy
@@ -215,7 +215,7 @@ impl<V: FixedArray> From<Vec<V>> for Matrix {
         let mut matrix = Matrix::zero_new(width, height);
         for row in 0..height {
             for col in 0..width {
-                matrix.insert(row, col, value[row][col]);
+                matrix.set(row, col, value[row][col]);
             }
         }
         matrix
@@ -333,10 +333,10 @@ mod tests {
     }
 
     #[test]
-    fn test_insert() {
+    fn test_set() {
         let mut matrix = Matrix::seq_new(4, 4);
         assert_eq!(matrix.get(0, 0), &0);
-        matrix.insert(0, 0, 1);
+        matrix.set(0, 0, 1);
         assert_eq!(matrix.get(0, 0), &1);
     }
 

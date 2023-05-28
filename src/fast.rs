@@ -242,7 +242,7 @@ mod tests {
 
                     // store
                     _mm_storeu_si128(buffer.as_mut_ptr() as *mut _, vc);
-                    C.insert(i, j, buffer[0] + buffer[1] + buffer[2] + buffer[3]);
+                    C.set(i, j, buffer[0] + buffer[1] + buffer[2] + buffer[3]);
                 }
             }
         }

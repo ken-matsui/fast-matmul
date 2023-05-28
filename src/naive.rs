@@ -70,25 +70,25 @@ mod tests {
         let size = 2;
 
         let mut A = Matrix::zero_new(size, size);
-        A.insert(0, 0, 21);
-        A.insert(0, 1, 53);
-        A.insert(1, 0, 7);
-        A.insert(1, 1, 3);
+        A.set(0, 0, 21);
+        A.set(0, 1, 53);
+        A.set(1, 0, 7);
+        A.set(1, 1, 3);
 
         let mut B = Matrix::zero_new(size, size);
-        B.insert(0, 0, 543);
-        B.insert(0, 1, 56);
-        B.insert(1, 0, 25);
-        B.insert(1, 1, 87);
+        B.set(0, 0, 543);
+        B.set(0, 1, 56);
+        B.set(1, 0, 25);
+        B.set(1, 1, 87);
 
         let mut C = Matrix::zero_new(size, size);
         naive::matmul(&A, &B, &mut C);
 
         let mut expected = Matrix::zero_new(size, size);
-        expected.insert(0, 0, 12728);
-        expected.insert(0, 1, 5787);
-        expected.insert(1, 0, 3876);
-        expected.insert(1, 1, 653);
+        expected.set(0, 0, 12728);
+        expected.set(0, 1, 5787);
+        expected.set(1, 0, 3876);
+        expected.set(1, 1, 653);
 
         assert_eq!(C, expected);
     }

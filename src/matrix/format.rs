@@ -1,15 +1,19 @@
 use crate::Matrix;
 
+use std::cell::RefCell;
 use std::cmp::min;
 use std::fmt;
 use std::fmt::{Debug, Display, Formatter};
-use std::sync::Mutex;
 
-pub static SHOW_ALL: Mutex<bool> = Mutex::new(false);
+thread_local! {
+    pub static SHOW_ALL: RefCell<bool> = RefCell::new(false);
+}
 
 impl Debug for Matrix {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        if *SHOW_ALL.lock().unwrap() {
+        let show_all = SHOW_ALL.with(|show_all| *show_all.borrow());
+
+        if show_all {
             writeln!(f, "({}x{})[", self.width, self.height)?;
             for row in 0..self.height {
                 write!(f, "  [")?;
@@ -160,7 +164,7 @@ mod tests {
 
     #[test]
     fn test_debug_show_all_1() {
-        *SHOW_ALL.lock().unwrap() = true;
+        SHOW_ALL.with(|show_all| *show_all.borrow_mut() = true);
 
         let matrix = matrix![[1, 2, 3], [4, 5, 6]];
         assert_eq!(
@@ -170,12 +174,10 @@ mod tests {
   [4, 5, 6],
 ]"#
         );
-
-        *SHOW_ALL.lock().unwrap() = false;
     }
     #[test]
     fn test_debug_show_all_2() {
-        *SHOW_ALL.lock().unwrap() = true;
+        SHOW_ALL.with(|show_all| *show_all.borrow_mut() = true);
 
         let matrix = matrix![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
         assert_eq!(
@@ -186,12 +188,10 @@ mod tests {
   [7, 8, 9],
 ]"#
         );
-
-        *SHOW_ALL.lock().unwrap() = false;
     }
     #[test]
     fn test_debug_show_all_3() {
-        *SHOW_ALL.lock().unwrap() = true;
+        SHOW_ALL.with(|show_all| *show_all.borrow_mut() = true);
 
         let matrix = matrix![[1, 2], [3, 4], [5, 6]];
         assert_eq!(
@@ -202,12 +202,10 @@ mod tests {
   [5, 6],
 ]"#
         );
-
-        *SHOW_ALL.lock().unwrap() = false;
     }
     #[test]
     fn test_debug_show_all_large() {
-        *SHOW_ALL.lock().unwrap() = true;
+        SHOW_ALL.with(|show_all| *show_all.borrow_mut() = true);
 
         let matrix = Matrix::seq_new(11, 6);
         assert_eq!(
@@ -221,7 +219,5 @@ mod tests {
   [55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65],
 ]"#
         );
-
-        *SHOW_ALL.lock().unwrap() = false;
     }
 }

@@ -109,8 +109,6 @@ mod tests {
 
     #[test]
     fn test_debug_default_1() {
-        *SHOW_ALL.lock().unwrap() = false;
-
         let matrix = matrix![[1, 2, 3], [4, 5, 6]];
         assert_eq!(
             format!("{matrix:?}"),
@@ -122,8 +120,6 @@ mod tests {
     }
     #[test]
     fn test_debug_default_2() {
-        *SHOW_ALL.lock().unwrap() = false;
-
         let matrix = matrix![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
         assert_eq!(
             format!("{matrix:?}"),
@@ -136,8 +132,6 @@ mod tests {
     }
     #[test]
     fn test_debug_default_3() {
-        *SHOW_ALL.lock().unwrap() = false;
-
         let matrix = matrix![[1, 2], [3, 4], [5, 6]];
         assert_eq!(
             format!("{matrix:?}"),
@@ -150,8 +144,6 @@ mod tests {
     }
     #[test]
     fn test_debug_default_large() {
-        *SHOW_ALL.lock().unwrap() = false;
-
         let matrix = Matrix::seq_new(11, 6);
         assert_eq!(
             format!("{matrix:?}"),
@@ -178,6 +170,8 @@ mod tests {
   [4, 5, 6],
 ]"#
         );
+
+        *SHOW_ALL.lock().unwrap() = false;
     }
     #[test]
     fn test_debug_show_all_2() {
@@ -192,6 +186,8 @@ mod tests {
   [7, 8, 9],
 ]"#
         );
+
+        *SHOW_ALL.lock().unwrap() = false;
     }
     #[test]
     fn test_debug_show_all_3() {
@@ -206,6 +202,8 @@ mod tests {
   [5, 6],
 ]"#
         );
+
+        *SHOW_ALL.lock().unwrap() = false;
     }
     #[test]
     fn test_debug_show_all_large() {
@@ -223,5 +221,7 @@ mod tests {
   [55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65],
 ]"#
         );
+
+        *SHOW_ALL.lock().unwrap() = false;
     }
 }

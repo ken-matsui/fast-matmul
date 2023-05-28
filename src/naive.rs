@@ -69,27 +69,87 @@ mod tests {
     fn test_matmul_3() {
         let size = 2;
 
-        let mut A = Matrix::zero_new(size, size);
-        A.set(0, 0, 21);
-        A.set(0, 1, 53);
-        A.set(1, 0, 7);
-        A.set(1, 1, 3);
-
-        let mut B = Matrix::zero_new(size, size);
-        B.set(0, 0, 543);
-        B.set(0, 1, 56);
-        B.set(1, 0, 25);
-        B.set(1, 1, 87);
+        let A = matrix![[21, 53], [7, 3]];
+        let B = matrix![[543, 56], [25, 87]];
 
         let mut C = Matrix::zero_new(size, size);
         naive::matmul(&A, &B, &mut C);
 
-        let mut expected = Matrix::zero_new(size, size);
-        expected.set(0, 0, 12728);
-        expected.set(0, 1, 5787);
-        expected.set(1, 0, 3876);
-        expected.set(1, 1, 653);
+        let expected = matrix![[12728, 5787], [3876, 653]];
+        assert_eq!(C, expected);
+    }
 
+    #[test]
+    fn test_matmul_4() {
+        let size = 2;
+
+        let A = matrix![[1, 2], [3, 4]];
+        let B = matrix![[5, 6], [7, 8]];
+
+        let mut C = Matrix::zero_new(size, size);
+        naive::matmul(&A, &B, &mut C);
+
+        let expected = matrix![[19, 22], [43, 50]];
+        assert_eq!(C, expected);
+    }
+
+    #[test]
+    fn test_matmul_5() {
+        let m = 2;
+        let n = 3;
+
+        let A = matrix![[432, 53], [32, 52], [32, 12]];
+        let B = matrix![[4, 2, 5], [3, 145, 2]];
+
+        let mut C = Matrix::zero_new(m, n);
+        naive::matmul(&A, &B, &mut C);
+
+        let expected = matrix![[1887, 8549], [284, 7604], [164, 1804]];
+        assert_eq!(C, expected);
+    }
+
+    #[test]
+    fn test_matmul_6() {
+        let m = 3;
+        let n = 2;
+
+        let A = matrix![[4, 2, 5], [3, 145, 2]];
+        let B = matrix![[432, 53], [32, 52], [32, 12]];
+
+        let mut C = Matrix::zero_new(m, n);
+        naive::matmul(&A, &B, &mut C);
+
+        let expected = matrix![[1952, 376, 192], [6000, 7723, 4736]];
+        assert_eq!(C, expected);
+    }
+
+    #[test]
+    fn test_matmul_7() {
+        let m = 5;
+        let n = 1;
+
+        let A = matrix![[4, 2, 5, 3, 145]];
+        let B = matrix![[63], [4321], [43], [3], [45]];
+
+        let mut C = Matrix::zero_new(m, n);
+        naive::matmul(&A, &B, &mut C);
+
+        let expected = matrix![[15643, 17520, 403, 102, 2268415]];
+        assert_eq!(C, expected);
+    }
+
+    #[test]
+    fn test_matmul_8() {
+        let m = 1;
+        let n = 5;
+
+        let A = matrix![[63], [4321], [43], [3], [45]];
+        let B = matrix![[4, 2, 5, 3, 145]];
+
+        let mut C = Matrix::zero_new(m, n);
+        naive::matmul(&A, &B, &mut C);
+
+        let expected = matrix![[252], [17284], [172], [12], [180]];
         assert_eq!(C, expected);
     }
 

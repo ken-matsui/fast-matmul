@@ -84,7 +84,7 @@ pub fn simd_matmul(A: &Matrix, B: &Matrix, C: &mut Matrix, param: Param) {
 
                                     // store
                                     _mm_storeu_si128(buffer.as_mut_ptr() as *mut _, vc);
-                                    C.insert(
+                                    C.set(
                                         i + ic,
                                         j + jc,
                                         buffer[0] + buffer[1] + buffer[2] + buffer[3],

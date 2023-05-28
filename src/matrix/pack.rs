@@ -33,47 +33,47 @@ impl Matrix {
         col_fr: usize,
         col_to: usize,
     ) -> Matrix {
-        let mut copy = Matrix::zero_new(row_to - row_fr, col_to - col_fr);
-        for col in col_fr..col_to {
-            for row in row_fr..row_to {
-                copy.set(row - row_fr, col - col_fr, *self.get(col, row));
-            }
-        }
-        copy
+        self.pack_into_row_major(row_fr, row_to, col_fr, col_to)
+            .transpose()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::matrix;
 
     #[test]
     fn test_pack_into_row_major_just_copy() {
         let matrix = Matrix::seq_new(4, 4);
         let packed = matrix.pack_into_row_major(0, 4, 0, 4);
+
         assert_eq!(packed, matrix);
     }
     #[test]
     fn test_pack_into_row_major_empty() {
         let matrix = Matrix::seq_new(4, 4);
         let packed = matrix.pack_into_row_major(0, 0, 0, 0);
+
         assert_eq!(packed, Matrix::zero_new(0, 0));
     }
     #[test]
     fn test_pack_into_row_major_1() {
         let matrix = Matrix::seq_new(4, 4);
         let packed = matrix.pack_into_row_major(0, 1, 0, 4);
+
         assert_eq!(packed.width, 4);
         assert_eq!(packed.height, 1);
-        assert_eq!(packed.inner, Matrix::seq_new(2, 2).inner);
+        assert_eq!(packed, Matrix::seq_new(4, 1));
     }
     #[test]
     fn test_pack_into_row_major_2() {
         let matrix = Matrix::seq_new(4, 4);
         let packed = matrix.pack_into_row_major(0, 2, 0, 4);
+
         assert_eq!(packed.width, 4);
         assert_eq!(packed.height, 2);
-        assert_eq!(packed.inner, Matrix::seq_new(4, 2).inner);
+        assert_eq!(packed, Matrix::seq_new(4, 2));
     }
     #[test]
     fn test_pack_into_row_major_3() {
@@ -95,12 +95,41 @@ mod tests {
     fn test_pack_into_col_major_just_copy() {
         let matrix = Matrix::seq_new(4, 4);
         let packed = matrix.pack_into_col_major(0, 4, 0, 4);
+
         assert_eq!(packed, matrix.transpose(), "packed should be transposed");
     }
     #[test]
     fn test_pack_into_col_major_empty() {
         let matrix = Matrix::seq_new(4, 4);
         let packed = matrix.pack_into_col_major(0, 0, 0, 0);
+
         assert_eq!(packed, Matrix::zero_new(0, 0));
+    }
+    #[test]
+    fn test_pack_into_col_major_1() {
+        let matrix = Matrix::seq_new(4, 4);
+        let packed = matrix.pack_into_col_major(0, 1, 0, 4);
+
+        assert_eq!(packed.width, 1);
+        assert_eq!(packed.height, 4);
+        assert_eq!(packed, Matrix::seq_new(4, 1).transpose());
+    }
+    #[test]
+    fn test_pack_into_col_major_2() {
+        let matrix = Matrix::seq_new(4, 4);
+        let packed = matrix.pack_into_col_major(0, 2, 0, 4);
+
+        assert_eq!(packed.width, 2);
+        assert_eq!(packed.height, 4);
+        assert_eq!(packed, Matrix::seq_new(4, 2).transpose());
+    }
+    #[test]
+    fn test_pack_into_col_major_3() {
+        let matrix = Matrix::seq_new(4, 4);
+        let packed = matrix.pack_into_col_major(2, 4, 0, 4);
+
+        assert_eq!(packed.width, 2);
+        assert_eq!(packed.height, 4);
+        assert_eq!(packed, matrix![[8, 12], [9, 13], [10, 14], [11, 15]]);
     }
 }

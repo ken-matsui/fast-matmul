@@ -1,5 +1,7 @@
-use std::cmp::min;
-use std::fmt::{self, Debug, Display, Formatter};
+mod format;
+
+pub use format::*;
+
 use std::ops::Index;
 
 use mimalloc::MiMalloc;
@@ -82,7 +84,6 @@ impl Matrix {
             inner: fake::vec![Value; width * height],
         }
     }
-
     /// Initialize with small random numbers that do not occur overflows
     #[inline(always)]
     pub fn small_rand_new(width: usize, height: usize) -> Self {
@@ -222,34 +223,6 @@ impl<V: FixedArray> From<Vec<V>> for Matrix {
     }
 }
 
-impl Debug for Matrix {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
-    }
-}
-
-impl Display for Matrix {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        writeln!(f, "({}x{})[", self.width, self.height)?;
-        for row in 0..min(self.height, 5) {
-            write!(f, "  [")?;
-            for col in 0..min(self.width, 10) {
-                write!(f, "{}", self.get(row, col))?;
-                if col == 9 && self.width > 10 {
-                    write!(f, ", ...")?;
-                } else if col != self.width - 1 {
-                    write!(f, ", ")?;
-                }
-            }
-            writeln!(f, "],")?;
-            if row == 4 && self.height > 5 {
-                writeln!(f, "  ...,")?;
-            }
-        }
-        write!(f, "]")
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -341,35 +314,40 @@ mod tests {
     }
 
     #[test]
-    fn test_pack_row_mjr_just_copy() {
+    fn test_pack_into_row_major_just_copy() {
         let matrix = Matrix::seq_new(4, 4);
         let copy = matrix.pack_into_row_major(0, 4, 0, 4);
         assert_eq!(copy, matrix);
     }
-
     #[test]
-    fn test_pack_row_mjr_empty() {
+    fn test_pack_into_row_major_empty() {
         let matrix = Matrix::seq_new(4, 4);
         let copy = matrix.pack_into_row_major(0, 0, 0, 0);
         assert_eq!(copy, Matrix::zero_new(0, 0));
     }
-
     #[test]
-    fn test_pack_row_mjr_1() {
+    fn test_pack_into_row_major_1() {
         let matrix = Matrix::seq_new(4, 4);
         let copy = matrix.pack_into_row_major(0, 1, 0, 4);
+        assert_eq!(copy.width, 4);
+        assert_eq!(copy.height, 1);
         assert_eq!(copy.inner, Matrix::seq_new(2, 2).inner);
     }
     #[test]
-    fn test_pack_row_mjr_2() {
+    fn test_pack_into_row_major_2() {
         let matrix = Matrix::seq_new(4, 4);
         let copy = matrix.pack_into_row_major(0, 2, 0, 4);
+        assert_eq!(copy.width, 4);
+        assert_eq!(copy.height, 2);
         assert_eq!(copy.inner, Matrix::seq_new(4, 2).inner);
     }
     #[test]
-    fn test_pack_row_mjr_3() {
+    fn test_pack_into_row_major_3() {
         let matrix = Matrix::seq_new(4, 4);
         let copy = matrix.pack_into_row_major(2, 4, 0, 4);
+
+        assert_eq!(copy.width, 4);
+        assert_eq!(copy.height, 2);
 
         let start = 4 * 2 + 0; // width (# of cols) * row + col
         for row in 0..2 {
@@ -380,10 +358,16 @@ mod tests {
     }
 
     #[test]
-    fn test_pack_col_mjr_just_copy() {
+    fn test_pack_into_col_major_just_copy() {
         let matrix = Matrix::seq_new(4, 4);
         let copy = matrix.pack_into_col_major(0, 4, 0, 4);
         assert_eq!(copy, matrix.transpose(), "copy should be transposed");
+    }
+    #[test]
+    fn test_pack_into_col_major_empty() {
+        let matrix = Matrix::seq_new(4, 4);
+        let copy = matrix.pack_into_col_major(0, 0, 0, 0);
+        assert_eq!(copy, Matrix::zero_new(0, 0));
     }
 
     #[test]
@@ -434,56 +418,5 @@ mod tests {
         assert_eq!(matrix.height, 3);
         assert_eq!(matrix.inner.len(), 6);
         assert_eq!(matrix.inner, vec![1, 2, 3, 4, 5, 6]);
-    }
-
-    #[test]
-    fn test_display_1() {
-        let matrix = matrix![[1, 2, 3], [4, 5, 6]];
-        assert_eq!(
-            format!("{matrix}"),
-            r#"(3x2)[
-  [1, 2, 3],
-  [4, 5, 6],
-]"#
-        );
-    }
-    #[test]
-    fn test_display_2() {
-        let matrix = matrix![[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-        assert_eq!(
-            format!("{matrix}"),
-            r#"(3x3)[
-  [1, 2, 3],
-  [4, 5, 6],
-  [7, 8, 9],
-]"#
-        );
-    }
-    #[test]
-    fn test_display_3() {
-        let matrix = matrix![[1, 2], [3, 4], [5, 6]];
-        assert_eq!(
-            format!("{matrix}"),
-            r#"(2x3)[
-  [1, 2],
-  [3, 4],
-  [5, 6],
-]"#
-        );
-    }
-    #[test]
-    fn test_display_large() {
-        let matrix = Matrix::seq_new(11, 6);
-        assert_eq!(
-            format!("{matrix}"),
-            r#"(11x6)[
-  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ...],
-  [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, ...],
-  [22, 23, 24, 25, 26, 27, 28, 29, 30, 31, ...],
-  [33, 34, 35, 36, 37, 38, 39, 40, 41, 42, ...],
-  [44, 45, 46, 47, 48, 49, 50, 51, 52, 53, ...],
-  ...,
-]"#
-        );
     }
 }

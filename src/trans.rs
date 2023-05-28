@@ -22,6 +22,7 @@ impl Matrix {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::matrix;
 
     fn is_transpose(A: &Matrix, B: &Matrix) -> bool {
         for row in 0..A.height {
@@ -36,19 +37,8 @@ mod tests {
 
     #[test]
     fn test_trans_impl_1() {
-        let size: usize = 2;
-
-        let mut A = Matrix::zero_new(size, size);
-        A.set(0, 0, 21);
-        A.set(0, 1, 53);
-        A.set(1, 0, 7);
-        A.set(1, 1, 3);
-
-        let mut expected = Matrix::zero_new(size, size);
-        expected.set(0, 0, 21);
-        expected.set(0, 1, 7);
-        expected.set(1, 0, 53);
-        expected.set(1, 1, 3);
+        let A = matrix![[21, 53], [7, 3]];
+        let expected = matrix![[21, 7], [53, 3]];
 
         let At = A.transpose();
         assert_eq!(At, expected);

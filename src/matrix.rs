@@ -23,10 +23,10 @@ type Value = u32;
 /// ```
 #[derive(PartialEq)]
 pub struct Matrix {
-    pub(crate) width: usize,
-    pub(crate) height: usize,
+    pub width: usize,
+    pub height: usize,
 
-    pub(crate) inner: Vec<Value>,
+    inner: Vec<Value>,
 }
 
 /// To avoid immutable borrow
